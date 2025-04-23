@@ -31,8 +31,10 @@ public class ARM2_V2Robot {
     private final double highBasket2 = Subsystem_Constants.highBasket2_auto;
     final double highRung2 = Subsystem_Constants.highRung2;
     final double highRung2_2 = Subsystem_Constants.highRung2_2;
+    final double highRung2_First = Subsystem_Constants.highRung2_First;
     private final double wall2 = Subsystem_Constants.wall2;
     private final double wall2_2 = Subsystem_Constants.wall2_2;
+    private final double wall2_First = Subsystem_Constants.wall2_First;
     private final double lowBasket2 = Subsystem_Constants.lowBasket2;
     private final double floor2 = Subsystem_Constants.floor2;
     private final double down2 = Subsystem_Constants.down2;
@@ -102,8 +104,10 @@ public class ARM2_V2Robot {
     public Action liftHighBasket() {return new LiftTarget(highBasket2);}
     public Action liftRung() {return new LiftTarget( highRung2);}
     public Action liftRung2() {return new LiftTarget( highRung2_2);}
+    public Action liftRung2_First() {return new LiftTarget( highRung2_First);}
     public Action liftWall() {return new LiftTarget(wall2);}
     public Action liftWall2() {return new LiftTarget(wall2_2);}
+    public Action liftWall2_First() {return new LiftTarget(wall2_First);}
     public Action liftLowBasket() {return new LiftTarget(lowBasket2);} //not tested i think
     public Action liftFloor() {return new LiftTarget(floor2);}
     public Action liftDown() {return new LiftTarget(down2);}
@@ -113,13 +117,16 @@ public class ARM2_V2Robot {
     public Action liftHighBasket(double seconds) {return new LiftTarget(highBasket2, seconds);}
     public Action liftRung(double seconds) {return new LiftTarget(highRung2, seconds);}
     public Action liftRung2(double seconds) {return new LiftTarget(highRung2_2, seconds);}
+    public Action liftRung2_First(double seconds) {return new LiftTarget(highRung2_First, seconds);}
     public Action liftWall(double seconds) {return new LiftTarget(wall2, seconds);}
     public Action liftWall2(double seconds) {return new LiftTarget(wall2_2, seconds);}
+    public Action liftWall2_First(double seconds) {return new LiftTarget(wall2_First, seconds);}
     public Action liftLowBasket(double seconds) {return new LiftTarget(lowBasket2, seconds);} //not tested i think
     public Action liftFloor(double seconds) {return new LiftTarget(floor2, seconds);}
     public Action liftDown(double seconds) {return new LiftTarget(down2, seconds);}
     public Action liftRung(double seconds, double power) {return new LiftTarget(highRung2, seconds, power);}
     public Action liftRung2(double seconds, double power) {return new LiftTarget(highRung2_2, seconds, power);}
+    public Action liftRung2_First(double seconds, double power) {return new LiftTarget(highRung2_First, seconds, power);}
     public Action liftRungFirst(double seconds, double power) {return new LiftTarget(highRung2+0.75,seconds,power);}
     public Action liftSub(double seconds) {return new LiftTarget(sub2,seconds);}
     public Action liftVertSub(double seconds) {return new LiftTarget(vertSub2, seconds);}
@@ -194,8 +201,10 @@ public class ARM2_V2Robot {
     public Action waitLiftHighBasket() {return new waitLiftTarget(highBasket2);}
     public Action waitLiftRung() {return new waitLiftTarget(highRung2);}
     public Action waitLiftRung2() {return new waitLiftTarget(highRung2_2);}
+    public Action waitLiftRung2_First() {return new waitLiftTarget(highRung2_First);}
     public Action waitLiftWall() {return new waitLiftTarget(wall2);}
     public Action waitLiftWall2() {return new waitLiftTarget(wall2_2);}
+    public Action waitLiftWall2_First() {return new waitLiftTarget(wall2_First);}
     public Action waitLiftLowBasket() {return new waitLiftTarget(lowBasket2);} //not tested i think
     public Action waitLiftFloor() {return new waitLiftTarget(floor2);}
     public Action waitLiftDown() {return new waitLiftTarget(down2);}
@@ -205,8 +214,10 @@ public class ARM2_V2Robot {
     public Action waitLiftHighBasket(double waitseconds) {return new waitLiftTarget(highBasket2,waitseconds);}
     public Action waitLiftRung(double waitseconds) {return new waitLiftTarget(highRung2,waitseconds);}
     public Action waitLiftRung2(double waitseconds) {return new waitLiftTarget(highRung2_2,waitseconds);}
+    public Action waitLiftRung2_First(double waitseconds) {return new waitLiftTarget(highRung2_First,waitseconds);}
     public Action waitLiftWall(double waitseconds) {return new waitLiftTarget(wall2,waitseconds);}
     public Action waitLiftWall2(double waitseconds) {return new waitLiftTarget(wall2_2,waitseconds);}
+    public Action waitLiftWall2_First(double waitseconds) {return new waitLiftTarget(wall2_First,waitseconds);}
     public Action waitLiftLowBasket(double waitseconds) {return new waitLiftTarget(lowBasket2,waitseconds);} //not tested i think
     public Action waitLiftFloor(double waitseconds) {return new waitLiftTarget(floor2,waitseconds);}
     public Action waitLiftDown(double waitseconds) {return new waitLiftTarget(down2,waitseconds);}
@@ -216,9 +227,11 @@ public class ARM2_V2Robot {
     public Action waitLiftHighBasket(double waitseconds, double seconds) {return new waitLiftTarget(highBasket2,waitseconds,seconds);}
     public Action waitLiftRung(double waitseconds, double seconds) {return new waitLiftTarget(highRung2,waitseconds,seconds);}
     public Action waitLiftRung2(double waitseconds, double seconds) {return new waitLiftTarget(highRung2_2,waitseconds,seconds);}
+    public Action waitLiftRung2_First(double waitseconds, double seconds) {return new waitLiftTarget(highRung2_First,waitseconds,seconds);}
     public Action waitLiftRung2First(double waitseconds, double seconds) {return new waitLiftTarget(highRung2_2+0.3,waitseconds,seconds);}
     public Action waitLiftWall(double waitseconds, double seconds) {return new waitLiftTarget(wall2,waitseconds,seconds);}
     public Action waitLiftWall2(double waitseconds, double seconds) {return new waitLiftTarget(wall2_2,waitseconds,seconds);}
+    public Action waitLiftWall2_First(double waitseconds, double seconds) {return new waitLiftTarget(wall2_First,waitseconds,seconds);}
     public Action waitLiftLowBasket(double waitseconds, double seconds) {return new waitLiftTarget(lowBasket2,waitseconds,seconds);} //not tested i think
     public Action waitLiftFloor(double waitseconds, double seconds) {return new waitLiftTarget(floor2,waitseconds,seconds);}
     public Action waitLiftDown(double waitseconds, double seconds) {return new waitLiftTarget(down2,waitseconds,seconds);}

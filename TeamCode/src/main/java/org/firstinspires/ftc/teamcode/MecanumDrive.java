@@ -64,28 +64,28 @@ public final class MecanumDrive {
                 RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
 
         // drive model parameters
-        public double inPerTick = 1;
-        public double lateralInPerTick = inPerTick;
-        public double trackWidthTicks = 0;
+        public double inPerTick = 0.0020111089829535;
+        public double lateralInPerTick = 0.001594331937488578;
+        public double trackWidthTicks = 6494.654176171068;
 
         // feedforward parameters (in tick units)
-        public double kS = 0;
-        public double kV = 0;
-        public double kA = 0;
+        public double kS = 0.7775495096096779;
+        public double kV = 0.00035527841995;
+        public double kA = 0.000055;
 
         // path profile parameters (in inches)
-        public double maxWheelVel = 70;
+        public double maxWheelVel = 80; //70;
         public double minProfileAccel = -40;
-        public double maxProfileAccel = 60;
+        public double maxProfileAccel = 100; //60;
 
         // turn profile parameters (in radians)
         public double maxAngVel = Math.PI; // shared with path
         public double maxAngAccel = Math.PI;
 
         // path controller gains
-        public double axialGain = 0.0;
-        public double lateralGain = 0.0;
-        public double headingGain = 0.0; // shared with turn
+        public double axialGain = 2.0;
+        public double lateralGain = 1.0;
+        public double headingGain = 2.0; // shared with turn
 
         public double axialVelGain = 0.0;
         public double lateralVelGain = 0.0;
@@ -247,7 +247,8 @@ public final class MecanumDrive {
 
         voltageSensor = hardwareMap.voltageSensor.iterator().next();
 
-        localizer = new PinpointLocalizer(hardwareMap, MecanumDrive.PARAMS.inPerTick, pose);
+        localizer = new PinpointLocalizer(hardwareMap, PARAMS.inPerTick, pose);
+//        localizer = new TwoDeadWheelLocalizer(hardwareMap, lazyImu.get(), PARAMS.inPerTick, pose);
 
         FlightRecorder.write("MECANUM_PARAMS", PARAMS);
     }
@@ -484,7 +485,8 @@ public final class MecanumDrive {
     public TrajectoryActionBuilder actionBuilder(Pose2d beginPose) {
         return new TrajectoryActionBuilder(
                 TurnAction::new,
-                FollowTrajectoryAsPathAction::new,
+//                FollowTrajectoryAsPathAction::new,
+                FollowTrajectoryAction::new,
                 new TrajectoryBuilderParams(
                         1e-6,
                         new ProfileParams(

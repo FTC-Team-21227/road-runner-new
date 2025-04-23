@@ -268,6 +268,10 @@ public class GoBildaPinpointDriver extends I2cDeviceSynchDevice<I2cDeviceSynchSi
         hVelocity     = byteArrayToFloat(Arrays.copyOfRange(bArr, 36,40), ByteOrder.LITTLE_ENDIAN);
     }
 
+    private double normalize(Float heading){
+        return 0.0F;
+    }
+
     /**
      * Call this once per loop to read new data from the Odometry Computer. This is an override of the update() function
      * which allows a narrower range of data to be read from the device for faster read times. Currently ONLY_UPDATE_HEADING

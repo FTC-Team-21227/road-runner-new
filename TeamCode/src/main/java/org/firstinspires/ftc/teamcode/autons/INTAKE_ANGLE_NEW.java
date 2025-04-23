@@ -17,8 +17,10 @@ public class INTAKE_ANGLE_NEW {
     final double intake_AngleFloor = Subsystem_Constants.intake_AngleFloor;
     final double intake_AngleBasket = Subsystem_Constants.intake_AngleBasket;
     final double intake_AngleRung = Subsystem_Constants.intake_AngleRung;
+    final double intake_AngleRung_First = Subsystem_Constants.intake_AngleRung_First;
     final double intake_AngleStart = Subsystem_Constants.intake_AngleStart;
     final double intake_AngleWall = Subsystem_Constants.intake_AngleWall;
+    final double intake_AngleWall_First = Subsystem_Constants.intake_AngleWall_First;
     final double intake_AngleVertical = Subsystem_Constants.intake_AngleVertical;
 
     public INTAKE_ANGLE_NEW(HardwareMap hardwareMap) {
@@ -67,6 +69,10 @@ public class INTAKE_ANGLE_NEW {
         return new MoveIntakeAngle(intake_AngleRung);
     }
     public Action RotatePosition0(double runt) {return new MoveIntakeAngle(intake_AngleRung, runt);}
+    public Action RotatePosition3() {
+        return new MoveIntakeAngle(intake_AngleRung_First);
+    }
+    public Action RotatePosition3(double runt) {return new MoveIntakeAngle(intake_AngleRung_First, runt);}
     public Action RotatePosition1() {
         return new MoveIntakeAngle(intake_AngleStart);
     }
@@ -75,6 +81,10 @@ public class INTAKE_ANGLE_NEW {
         return new MoveIntakeAngle(intake_AngleWall);
     }
     public Action RotatePositionNegative1(double runt) {return new MoveIntakeAngle(intake_AngleWall,runt);}
+    public Action RotatePositionNegative2() {
+        return new MoveIntakeAngle(intake_AngleWall_First);
+    }
+    public Action RotatePositionNegative2(double runt) {return new MoveIntakeAngle(intake_AngleWall_First,runt);}
     public Action RotatePosition2() {
         return new MoveIntakeAngle(intake_AngleVertical);
     }
