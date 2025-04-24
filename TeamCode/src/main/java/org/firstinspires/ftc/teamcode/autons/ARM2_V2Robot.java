@@ -188,9 +188,9 @@ public class ARM2_V2Robot {
                     double power = ARM_Control_PID();
                     packet.addLine("power2:"+power);
                     arm2.setPower(power);}
-                else{
-                    arm2.setPower(0);
-                }
+//                else{
+//                    arm2.setPower(0);
+//                }
                 return true;
             } else {
                 arm2.setPower(0);

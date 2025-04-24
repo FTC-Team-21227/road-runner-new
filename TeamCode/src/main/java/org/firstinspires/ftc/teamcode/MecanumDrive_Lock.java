@@ -285,8 +285,9 @@ public final class MecanumDrive_Lock {
         private double beginTs = -1;
 
         private final double[] xPoints, yPoints;
+        private final BooleanSupplier continueCondition;
 
-        public FollowTrajectoryAction(TimeTrajectory t) {
+        public FollowTrajectoryAction(TimeTrajectory t, BooleanSupplier continueCondition) {
             timeTrajectory = t;
 
             List<Double> disps = com.acmerobotics.roadrunner.Math.range(
@@ -299,6 +300,7 @@ public final class MecanumDrive_Lock {
                 xPoints[i] = p.position.x;
                 yPoints[i] = p.position.y;
             }
+            this.continueCondition = continueCondition;
         }
 
         @Override
@@ -311,7 +313,7 @@ public final class MecanumDrive_Lock {
                 t = Actions.now() - beginTs;
             }
 
-            if (t >= timeTrajectory.duration) {
+            if (!continueCondition.getAsBoolean()) {
                 leftFront.setPower(0);
                 leftBack.setPower(0);
                 rightBack.setPower(0);
@@ -482,7 +484,7 @@ public final class MecanumDrive_Lock {
             } else {
                 t = Actions.now() - beginTs;
             }
-            t = Math.min(t,turn.duration);
+//            t = Math.min(t,turn.duration);
 
             if (!continueCondition.getAsBoolean()) {
                 leftFront.setPower(0);
@@ -578,8 +580,8 @@ public final class MecanumDrive_Lock {
     public TrajectoryActionBuilder actionBuilder(Pose2d beginPose, BooleanSupplier continueCondition) {
         return new TrajectoryActionBuilder(
                 t -> new TurnAction_Lock(t, continueCondition),
-                t -> new FollowTrajectoryAsPathAction(t, continueCondition),
-//                FollowTrajectoryAction::new,
+//                t -> new FollowTrajectoryAsPathAction(t, continueCondition),
+                t -> new FollowTrajectoryAction(t, continueCondition),
                 new TrajectoryBuilderParams(
                         1e-6,
                         new ProfileParams(

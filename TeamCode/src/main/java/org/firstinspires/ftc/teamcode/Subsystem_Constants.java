@@ -5,7 +5,7 @@ public class Subsystem_Constants {
     public final static double highBasket1 = 102.3167; //97.854286777;
     public final static double highRung1 = 3.3954; //2.5585;
     public final static double highRung1_2 = 53.2984; //49.7117; //42.4905; //37.6126; //49.1587;
-    public final static double highRung1_First = 43.1839;
+    public final static double highRung1_First = 42.1839;
 
     public final static double wall1 = 8;
     public final static double wallwall1 = 26;
