@@ -33,8 +33,8 @@ public class TeleOp2425_V3Robot extends LinearOpMode {
     double target1 = 0;
     double target2 = 0;
     //ticks to degrees conversion, very useful
-    private final double ticks_in_degree_1 = 537.7*28/360; // = 41.8211111111
-    private final double ticks_in_degree_2 = 145.1*28/360; // = 11.2855555556
+    private final double ticks_in_degree_1 = TunePID_MotionProfile.ticks_in_degree_1;
+    private final double ticks_in_degree_2 = TunePID_MotionProfile.ticks_in_degree_2;
     private final double L1 = 43.2;
     private final double L2 = 43.2;
     private final double x1 = 36.96;

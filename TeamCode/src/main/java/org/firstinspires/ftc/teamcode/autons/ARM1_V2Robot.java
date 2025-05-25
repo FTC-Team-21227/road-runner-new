@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.Subsystem_Constants;
 import org.firstinspires.ftc.teamcode.TunePID;
+import org.firstinspires.ftc.teamcode.TunePID_MotionProfile;
 
 public class ARM1_V2Robot {
     private DcMotor arm1;
@@ -20,7 +21,7 @@ public class ARM1_V2Robot {
     double p1 = TunePID.p1, i1 = TunePID.i1, d1 = TunePID.d1;
     double f1 = TunePID.f1;
     //ticks to degrees conversion
-    private final double ticks_in_degree_1 = 41.8211111111;
+    private final double ticks_in_degree_1 = TunePID_MotionProfile.ticks_in_degree_1;
     //length, COM, mass values for feedforward calculation
     private final double L1 = 43.2;
     private final double L2 = 43.2;

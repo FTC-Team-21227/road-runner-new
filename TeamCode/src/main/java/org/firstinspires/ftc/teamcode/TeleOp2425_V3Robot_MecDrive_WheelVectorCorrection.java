@@ -21,6 +21,7 @@ import org.firstinspires.ftc.teamcode.autons.PoseStorage;
 import java.util.*;
 import java.util.function.BooleanSupplier;
 
+//has new pid but no motion profule
 @TeleOp(name = "TeleOp2425_V3Robot_MecDrive")
 public class TeleOp2425_V3Robot_MecDrive_WheelVectorCorrection extends LinearOpMode {
     //PID controllers for ARM1 and ARM2
@@ -35,8 +36,8 @@ public class TeleOp2425_V3Robot_MecDrive_WheelVectorCorrection extends LinearOpM
     double target1 = 0;
     double target2 = 0;
     //ticks to degrees conversion, very useful
-    private final double ticks_in_degree_1 = 537.7*28/360; // = 41.8211111111
-    private final double ticks_in_degree_2 = 145.1*28/360; // = 11.2855555556
+    private final double ticks_in_degree_1 = TunePID_MotionProfile.ticks_in_degree_1;
+    private final double ticks_in_degree_2 = TunePID_MotionProfile.ticks_in_degree_2;
     private final double L1 = 43.2;
     private final double L2 = 43.2;
     private final double x1 = 36.96;
@@ -146,6 +147,8 @@ public class TeleOp2425_V3Robot_MecDrive_WheelVectorCorrection extends LinearOpM
     Pose2d target;
     private List<Action> runningActions = new ArrayList<>();
     TelemetryPacket p = new TelemetryPacket();
+    double ARM1_OFFSET = -10;
+    double ARM2_OFFSET = 10;
     /**
      * This function is executed when this Op Mode is selected from the Driver Station.
      */
@@ -422,22 +425,42 @@ public class TeleOp2425_V3Robot_MecDrive_WheelVectorCorrection extends LinearOpM
         if (!state.equals("floor")){
             Lift_Power = 1;
         }
+        double theta1_actual = Math.toRadians(target1 + ARM1_OFFSET);
+        double theta2_actual = Math.toRadians(target1 + ARM1_OFFSET + target2 + ARM2_OFFSET);
         controller1.setPID(p1,i1,d1);
         arm1Pos = ARM1.getCurrentPosition();
         double pid1 = controller1.calculate(arm1Pos,(int)(target1*ticks_in_degree_1)); //PID calculation
-        double ff1 = (m1*Math.cos(Math.toRadians(target1))*x1 +
-        m2*Math.cos(Math.atan(((x2*Math.sin(Math.toRadians(target1+target2)))+(L1*Math.sin(Math.toRadians(target1))))/((L1*Math.cos(Math.toRadians(target1)))+(x2*Math.cos(Math.toRadians(target1+target2))))))*
-        Math.sqrt(Math.pow((x2*Math.sin(Math.toRadians(target1+target2))+L1*Math.sin(Math.toRadians(target1))),2)+Math.pow((x2*Math.cos(Math.toRadians(target1+target2))+L1*Math.cos(Math.toRadians(target1))),2))) * f1; // feedforward calculation, change when equation is derived
+        double ff1 = (m1 * x1 * Math.cos(theta1_actual) + m2 * (L1 * Math.cos(theta1_actual) + x2 * Math.cos(theta2_actual))) * f1;
         double power1 = pid1 + ff1;
         ARM1.setPower(power1*Lift_Power); //set the power
 
         controller2.setPID(p2,i2,d2);
         arm2Pos = ARM2.getCurrentPosition();
         double pid2 = controller2.calculate(arm2Pos, (int)(target2*ticks_in_degree_2));
-        double ff2 = (m2*Math.cos(Math.toRadians(target1+target2))*x2) * f2; //feedforward calculation, change when equation is derived
+        double ff2 = m2 * x2 * Math.cos(theta2_actual) * f2;
         double power2 = pid2 + ff2;
         ARM2.setPower(power2);
     }
+//    private void ARM_PID_Control(){
+//        if (!state.equals("floor")){
+//            Lift_Power = 1;
+//        }
+//        controller1.setPID(p1,i1,d1);
+//        arm1Pos = ARM1.getCurrentPosition();
+//        double pid1 = controller1.calculate(arm1Pos,(int)(target1*ticks_in_degree_1)); //PID calculation
+//        double ff1 = (m1*Math.cos(Math.toRadians(target1))*x1 +
+//                m2*Math.cos(Math.atan(((x2*Math.sin(Math.toRadians(target1+target2)))+(L1*Math.sin(Math.toRadians(target1))))/((L1*Math.cos(Math.toRadians(target1)))+(x2*Math.cos(Math.toRadians(target1+target2))))))*
+//                        Math.sqrt(Math.pow((x2*Math.sin(Math.toRadians(target1+target2))+L1*Math.sin(Math.toRadians(target1))),2)+Math.pow((x2*Math.cos(Math.toRadians(target1+target2))+L1*Math.cos(Math.toRadians(target1))),2))) * f1; // feedforward calculation, change when equation is derived
+//        double power1 = pid1 + ff1;
+//        ARM1.setPower(power1*Lift_Power); //set the power
+//
+//        controller2.setPID(p2,i2,d2);
+//        arm2Pos = ARM2.getCurrentPosition();
+//        double pid2 = controller2.calculate(arm2Pos, (int)(target2*ticks_in_degree_2));
+//        double ff2 = (m2*Math.cos(Math.toRadians(target1+target2))*x2) * f2; //feedforward calculation, change when equation is derived
+//        double power2 = pid2 + ff2;
+//        ARM2.setPower(power2);
+//    }
     private void ARM_Calibration(){
         //resets each motor to 0 when the touch sensor is pressed, and doesn't enter the if statement afterwards
         if (!ARM1Sensor.isPressed() && !ARM1calibrated) {
@@ -605,7 +628,7 @@ public class TeleOp2425_V3Robot_MecDrive_WheelVectorCorrection extends LinearOpM
         ARM1.setPower(0);
         target1 = ARM1.getCurrentPosition()/ticks_in_degree_1;
         ARM2.setDirection(DcMotor.Direction.REVERSE);
-        ARM1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        ARM2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         ARM2.setPower(0);
         target2 = ARM2.getCurrentPosition()/ticks_in_degree_2;
         telemetry.addData("Claw",Claw.getPosition());

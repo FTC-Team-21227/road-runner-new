@@ -33,8 +33,8 @@ public class TeleOp2425_PIDFArm extends LinearOpMode {
     double target1 = 0;
     double target2 = 0;
     //ticks to degrees conversion, very useful
-    private final double ticks_in_degree_1 = 537.7*28/360; // = 41.8211111111
-    private final double ticks_in_degree_2 = 145.1*28/360; // = 11.2855555556
+    private final double ticks_in_degree_1 = TunePID_MotionProfile.ticks_in_degree_1;
+    private final double ticks_in_degree_2 = TunePID_MotionProfile.ticks_in_degree_2;
     private final double L1 = 43.2;
     private final double L2 = 43.2;
     private final double x1 = 36.96;
@@ -218,8 +218,8 @@ public class TeleOp2425_PIDFArm extends LinearOpMode {
             target2 = 0;
             ARM2calibrated = true;
         }
-        else if (!ARM2calibrated && ARM2.getPower() != -0.15){
-            ARM2.setPower(-0.15);
+        else if (!ARM2calibrated && ARM2.getPower() != -0.2){
+            ARM2.setPower(-0.2);
         }
         telemetry.addData("We Are Heree","yesd");
     }
@@ -229,7 +229,7 @@ public class TeleOp2425_PIDFArm extends LinearOpMode {
             ARM1calibrated = false;
             ARM2calibrated = false;
             ARM1.setPower(-0.2);
-            ARM2.setPower(-0.15);
+            ARM2.setPower(-0.2);
         }
         if (gamepad2.a) { //prepare for hang
             target1 = 113.330920056;

@@ -26,7 +26,7 @@ public class Subsystem_Constants {
     public final static double wall2_2 = 160.0909; //161.0909; //158.1668; //160.4706; //158.7948; //157.1921; //168.8; //168.534; //169.1543; //168.9771;
     public final static double wall2_First = 5.7596;
     public final static double lowBasket2 = 50; //not tested
-    public final static double floor2 = 163; //166; //160.1162; //164.8124; //162.5972; //161.3567; //159.8503;
+    public final static double floor2 = 166; //163; //166; //160.1162; //164.8124; //162.5972; //161.3567; //159.8503;
     public final static double down2 = 10.0199819357;
     public final static double vertSub2 = 160;
     public final static double sub2 = vertSub2;
