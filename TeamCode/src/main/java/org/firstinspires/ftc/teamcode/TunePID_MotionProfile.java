@@ -34,7 +34,7 @@ public class TunePID_MotionProfile extends OpMode {
     public static final double L1 = 43.2;
     public static final double L2 = 43.2;
     public static final double x1 = 36.96;
-    public static final double x2 = 26.4; //31.48;
+    public static final double x2 = 31.48; //26.4; //31.48;
     public static final double m1 = 810;
     public static final double m2 = 404.273; //99.79;
     // ARM1 Motion Profile Variables
@@ -53,7 +53,7 @@ public class TunePID_MotionProfile extends OpMode {
 
     // Profile Parameters (tune these!)
     public static double V_MAX = 200000.0; // Encoder ticks/sec (≈ 100° /sec if 1 tick/degree)
-    public static double A_DEC = 70000.0; // Ticks/sec² (adjust for smooth stopping)
+    public static double A_DEC = 55000.0; //70000.0; // Ticks/sec² (adjust for smooth stopping)
     public static double LOOP_TIME = 0.02; // 20ms (typical FTC loop time)
     @Override
     public void init(){
