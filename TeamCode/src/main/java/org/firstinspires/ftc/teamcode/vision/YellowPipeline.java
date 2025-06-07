@@ -1,48 +1,37 @@
 package org.firstinspires.ftc.teamcode.vision;
 
+import com.acmerobotics.dashboard.config.Config;
+
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
+import org.opencv.core.MatOfPoint2f;
+import org.opencv.core.Point;
+import org.opencv.core.Point3;
 import org.opencv.core.Scalar;
-import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.openftc.easyopencv.OpenCvPipeline;
 
+import java.util.ArrayList;
+import java.util.Collections;
+
+
+@Config
 public class YellowPipeline extends OpenCvPipeline {
-
-    /*
-     * These are our variables that will be
-     * modifiable from the variable tuner.
-     *
-     * Scalars in OpenCV are generally used to
-     * represent color. So our values in the
-     * lower and upper Scalars here represent
-     * the Y, Cr and Cb values respectively.
-     *
-     * YCbCr, like most color spaces, range
-     * from 0-255, so we default to those
-     * min and max values here for now, meaning
-     * that all pixels will be shown.
-     */
-    public Scalar lower = new Scalar(45.3, 151.6, 0);
-    public Scalar upper = new Scalar(198.3, 191.3, 90.7);
-
+    public static Scalar lowerYellow = new Scalar(130, 130, 0);
+    public static Scalar upperYellow = new Scalar(255, 175, 110);
+    public static boolean pipelineOn = true;
     /**
      * This will allow us to choose the color
      * space we want to use on the live field
      * tuner instead of hardcoding it
      */
-    public ColorSpace colorSpace = ColorSpace.YCrCb;
+    ColorSpace colorSpace = ColorSpace.YCrCb;
 
     /*
-     * A good practice when typing EOCV pipelines is
      * declaring the Mats you will use here at the top
-     * of your pipeline, to reuse the same buffers every
-     * time. This removes the need to call mat.release()
-     * with every Mat you create on the processFrame method,
-     * and therefore, reducing the possibility of getting a
-     * memory leak and causing the app to crash due to an
-     * "Out of Memory" error.
+     * of your pipeline to prevent "out of memory" error
      */
     private Mat ycrcbMat       = new Mat();
     private Mat binaryMat      = new Mat();
@@ -53,10 +42,11 @@ public class YellowPipeline extends OpenCvPipeline {
 
     /**
      * Enum to choose which color space to choose
-     * with the live variable tuner isntead of
+     * with the live variable tuner instead of
      * hardcoding it.
      */
-    enum ColorSpace {
+    enum ColorSpace
+    {
         /*
          * Define our "conversion codes" in the enum
          * so that we don't have to do a switch
@@ -71,84 +61,80 @@ public class YellowPipeline extends OpenCvPipeline {
         public int cvtCode = 0;
 
         //constructor to be used by enum declarations above
-        ColorSpace(int cvtCode) {
+        ColorSpace(int cvtCode)
+        {
             this.cvtCode = cvtCode;
         }
     }
 
-    public YellowPipeline(Telemetry telemetry) {
+    public YellowPipeline(Telemetry telemetry)
+    {
         this.telemetry = telemetry;
     }
 
     @Override
-    public Mat processFrame(Mat input) {
-        /*
-         * Converts our input mat from RGB to
-         * specified color space by the enum.
-         * EOCV ALWAYS returns RGB mats, so you'd
-         * always convert from RGB to the color
-         * space you want to use.
-         *
-         * Takes our "input" mat as an input, and outputs
-         * to a separate Mat buffer "ycrcbMat"
-         */
+    public Mat processFrame(Mat input)
+    {
         Imgproc.cvtColor(input, ycrcbMat, colorSpace.cvtCode);
+        Core.inRange(ycrcbMat, lowerYellow, upperYellow, binaryMat);
 
-        /*
-         * This is where our thresholding actually happens.
-         * Takes our "ycrcbMat" as input and outputs a "binary"
-         * Mat to "binaryMat" of the same size as our input.
-         * "Discards" all the pixels outside the bounds specified
-         * by the scalars above (and modifiable with EOCV-Sim's
-         * live variable tuner.)
-         *
-         * Binary meaning that we have either a 0 or 255 value
-         * for every pixel.
-         *
-         * 0 represents our pixels that were outside the bounds
-         * 255 represents our pixels that are inside the bounds
-         */
-        Core.inRange(ycrcbMat, lower, upper, binaryMat);
-
-        /*
-         * Release the reusable Mat so that old data doesn't
-         * affect the next step in the current processing
-         */
-        maskedInputMat.release();
-
-        /*
-         * Now, with our binary Mat, we perform a "bitwise and"
-         * to our input image, meaning that we will perform a mask
-         * which will include the pixels from our input Mat which
-         * are "255" in our binary Mat (meaning that they're inside
-         * the range) and will discard any other pixel outside the
-         * range (RGB 0, 0, 0. All discarded pixels will be black)
-         */
         Core.bitwise_and(input, input, maskedInputMat, binaryMat);
 
-        binaryMat.release();
+        // Find contours
+        ArrayList<MatOfPoint> contours = new ArrayList<>();
+        Mat hierarchy = new Mat();
 
+        Mat grayMaksedInput = new Mat();
 
+        Imgproc.cvtColor(maskedInputMat, grayMaksedInput, Imgproc.COLOR_YCrCb2RGB);
+        Imgproc.cvtColor(maskedInputMat, grayMaksedInput, Imgproc.COLOR_RGB2GRAY);
+        Imgproc.findContours(maskedInputMat, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
+
+        // Store contours
+        ArrayList<ArrayList<Point3>> contour3DList = new ArrayList<>();
+
+        for (MatOfPoint contour : contours) {
+            // Approximate polygonal curve
+            MatOfPoint2f contour2f = new MatOfPoint2f(contour.toArray());
+            double epsilon = 0.02 * Imgproc.arcLength(contour2f, true);
+            MatOfPoint2f approx = new MatOfPoint2f();
+            Imgproc.approxPolyDP(contour2f, approx, epsilon, true);
+
+            // Convert to 3D points (Z=0)
+            ArrayList<Point3> contour3D = new ArrayList<>();
+            for (Point pt : approx.toArray()) {
+                contour3D.add(new Point3(pt.x, pt.y, 0));
+            }
+            contour3DList.add(contour3D);
+
+            // Draw polygon on original image
+            MatOfPoint polygon = new MatOfPoint(approx.toArray());
+            Imgproc.drawContours(maskedInputMat, Collections.singletonList(polygon), -1, new Scalar(0, 0, 255), 2);
+        }
+
+        // Print 3D points for use in 3D viewer
+        for (int i = 0; i < contour3DList.size(); i++) {
+            telemetry.addData("Contour", i);
+            for (Point3 p : contour3DList.get(i)) {
+                telemetry.addData("x-coor", p.x);
+                telemetry.addData("y-coor", p.y);
+                telemetry.addData("z-coor", p.z);
+            }
+        }
 
         /**
          * Add some nice and informative telemetry messages
          */
         telemetry.addData("[>]", "Change these values in tuner menu");
         telemetry.addData("[Color Space]", colorSpace.name());
-        telemetry.addData("[Lower Scalar]", lower);
-        telemetry.addData("[Upper Scalar]", upper);
+        telemetry.addData("[Lower Scalar]", lowerYellow);
+        telemetry.addData("[Upper Scalar]", upperYellow);
         telemetry.update();
-
-        /*
-         * The Mat returned from this method is the
-         * one displayed on the viewport.
-         *
-         * To visualize our threshold, we'll return
-         * the "masked input mat" which shows the
-         * pixel from the input Mat that were inside
-         * the threshold range.
-         */
-        return maskedInputMat;
+        if (pipelineOn) {
+            return maskedInputMat;
+        }
+        else{
+            return input;
+        }
     }
-
 }
