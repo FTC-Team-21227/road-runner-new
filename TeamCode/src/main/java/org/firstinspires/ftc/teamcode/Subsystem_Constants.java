@@ -14,13 +14,13 @@ public class Subsystem_Constants {
     public final static double lowBasket1 = 50; //not tested
     public final static double floor1 = 0.6217;
     public final static double down1 = 4.48338159887;
-    public final static double vertSub1 = 14.8968;
+    public final static double vertSub1 = 8; //14.8968;
     public final static double sub1 = vertSub1; //6.4322;
     public final static double vertFloor1 = 8; //8.1777;
     public final static double highBasket2_auto = 141.1539;
     public final static double highBasket2_teleop = 131.0525; //156.6604; //141.1539; //131.0525;
     public final static double highRung2 = 91-0.722; //91; //90.7355; //90.2924; // 88.72; //87.1025; //90.381; //91.7102;//94.457; //90.381; //92.6;
-    public final static double highRung2_2 = 36.3296; //34.4688; //36.5955; //35.5321; //38.7221;//36.241; //33.76; //33.5828; //35; //37.836; //33.76; //38.3676; //37.1271; //31.1093;
+    public final static double highRung2_2 = 34.8296; //34.3296; //36.3296; //34.4688; //36.5955; //35.5321; //38.7221;//36.241; //33.76; //33.5828; //35; //37.836; //33.76; //38.3676; //37.1271; //31.1093;
     public final static double highRung2_First = 157.39;
     public final static double wall2 = 156.4382; //157.9896;// 154.8883; //157.0149; //154.8883; //156.749
     public final static double wall2_2 = 160.0909; //161.0909; //158.1668; //160.4706; //158.7948; //157.1921; //168.8; //168.534; //169.1543; //168.9771;
@@ -28,7 +28,7 @@ public class Subsystem_Constants {
     public final static double lowBasket2 = 50; //not tested
     public final static double floor2 = 166; //163; //166; //160.1162; //164.8124; //162.5972; //161.3567; //159.8503;
     public final static double down2 = 10.0199819357;
-    public final static double vertSub2 = 160;
+    public final static double vertSub2 = 162;
     public final static double sub2 = vertSub2;
     public final static double vertFloor2 = 158.2554;
 
@@ -41,15 +41,16 @@ public class Subsystem_Constants {
 
     public final static double intake_AngleScale0 = 0;
     public final static double intake_AngleScale1 = 1;
-    public final static double intake_AngleFloor = 0.32; //0.26;
-    public final static double intake_AngleBasket = 0.41; //0.36;
-    public final static double intake_AngleBasket_teleop = 0.41; //intake_AngleFloor; //0.45, 0.35
-    public final static double intake_AngleRung = 0.3; //0.27; //0.2;
-    public final static double intake_AngleRung_First = 0.44;
-    public final static double intake_AngleStart = 0.8;
+    public final static double intake_AngleFloor = 0.29; //0.32; //0.26;
+    public final static double intake_AngleBasket = 0.38; //0.41; //0.36;
+    public final static double intake_AngleBasket_teleop = 0.38; //0.41; //intake_AngleFloor; //0.45, 0.35
+    public final static double intake_AngleRung = 0.27; //0.3; //0.27; //0.2;
+    public final static double intake_AngleRung_First = 0.42; //0.41; //0.44;
+    public final static double intake_AngleRung_Second = 0.24;
+    public final static double intake_AngleStart = 0.77; //0.8;
     public final static double intake_AngleWall = 0;
-    public final static double intake_AngleWall_First = 0.1794;
-    public final static double intake_AngleVertical = 0.65; //0.7; //0.65;
+    public final static double intake_AngleWall_First = 0.1494; //0.1794;
+    public final static double intake_AngleVertical = 0.62; //0.65; //0.7; //0.65;
 
     public final static double claw_AngleScale0 = 0;
     public final static double claw_AngleScale1 = 0.7;

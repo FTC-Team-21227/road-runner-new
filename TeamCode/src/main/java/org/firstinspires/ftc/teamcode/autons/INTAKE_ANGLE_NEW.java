@@ -18,6 +18,7 @@ public class INTAKE_ANGLE_NEW {
     final double intake_AngleBasket = Subsystem_Constants.intake_AngleBasket;
     final double intake_AngleRung = Subsystem_Constants.intake_AngleRung;
     final double intake_AngleRung_First = Subsystem_Constants.intake_AngleRung_First;
+    final double intake_AngleRung_Second = Subsystem_Constants.intake_AngleRung_Second;
     final double intake_AngleStart = Subsystem_Constants.intake_AngleStart;
     final double intake_AngleWall = Subsystem_Constants.intake_AngleWall;
     final double intake_AngleWall_First = Subsystem_Constants.intake_AngleWall_First;
@@ -73,6 +74,10 @@ public class INTAKE_ANGLE_NEW {
         return new MoveIntakeAngle(intake_AngleRung_First);
     }
     public Action RotatePosition3(double runt) {return new MoveIntakeAngle(intake_AngleRung_First, runt);}
+    public Action RotatePosition4() {
+        return new MoveIntakeAngle(intake_AngleRung_Second);
+    }
+    public Action RotatePosition4(double runt) {return new MoveIntakeAngle(intake_AngleRung_Second, runt);}
     public Action RotatePosition1() {
         return new MoveIntakeAngle(intake_AngleStart);
     }

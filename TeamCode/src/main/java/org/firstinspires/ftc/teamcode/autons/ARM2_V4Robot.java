@@ -11,10 +11,10 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.Subsystem_Constants;
-import org.firstinspires.ftc.teamcode.TunePID;
+import org.firstinspires.ftc.teamcode.TunePID_BangBang;
 import org.firstinspires.ftc.teamcode.TunePID_MotionProfile;
 
-public class ARM2_V3Robot {
+public class ARM2_V4Robot {
     private DcMotor arm2;
     //PID controllers for ARM1 and ARM2
     private PIDController controller2;
@@ -43,18 +43,13 @@ public class ARM2_V3Robot {
     private final double sub2 = Subsystem_Constants.sub2;
     private final double vertSub2 = Subsystem_Constants.vertSub2;
     private final double vertFloor2 = Subsystem_Constants.vertFloor2;
-    // Motion Profile Variables (ADDED)
-    private double arm2StartPos;
-    private double arm2TargetPos;
-    private double arm2DDec;
-    private boolean arm2Decelerating = false;
-    private final double V_MAX = TunePID_MotionProfile.V_MAX; // Encoder ticks/sec (≈ 100° /sec if 1 tick/degree)
-    private final double A_DEC = TunePID_MotionProfile.A_DEC; // Ticks/sec² (adjust for smooth stopping)
-    private final double LOOP_TIME = TunePID_MotionProfile.LOOP_TIME; // 20ms (typical FTC loop time)
     double ARM1_OFFSET = TunePID_MotionProfile.ARM1_OFFSET;
     double ARM2_OFFSET = TunePID_MotionProfile.ARM2_OFFSET;
+    private final double BANG_BANG_POWER = TunePID_BangBang.BANG_BANG_POWER;  // Full power
+    private  final double PID_ZONE = TunePID_BangBang.PID_ZONE_2;       // Switch to PID within this distance (ticks)
+    private boolean arm2InPIDZone = false;
 
-    public ARM2_V3Robot(HardwareMap hardwareMap) {
+    public ARM2_V4Robot(HardwareMap hardwareMap) {
         arm2 = hardwareMap.get(DcMotor.class, "ARM2");
         arm2.setDirection(DcMotor.Direction.REVERSE); //CHANGE BACK TO DCMOTORSIMPLE IF SOMETHING DOESN'T WORK
         arm2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -71,7 +66,6 @@ public class ARM2_V3Robot {
         double runTime;
         boolean startMove;
         double power = 1;
-        boolean profile = true;
 
         public LiftTarget(double pos) {
             target2 = pos;
@@ -106,73 +100,32 @@ public class ARM2_V3Robot {
             power = pwr;
         }
 
-        public LiftTarget(double pos, double tim, double runtime, double pwr, boolean prof) {
-            target2 = pos;
-            start = false;
-            startMove = false;
-            waitTime = tim;
-            runTime = runtime;
-            power = pwr;
-            profile = prof;
-        }
-
-        private void initArmProfile(double targetPos) {
-            arm2StartPos = arm2.getCurrentPosition();
-            arm2TargetPos = targetPos;
-            double dTotal = Math.abs(arm2TargetPos - arm2StartPos);
-            arm2DDec = (V_MAX * V_MAX) / (2 * A_DEC);
-            arm2Decelerating = (dTotal <= arm2DDec);
-        }
-
-        private void updateArmProfile() {
-            DcMotor motor;
-            double currentPos, targetPos, dDec;
-            boolean decelerating;
-            motor = arm2;
-            currentPos = motor.getCurrentPosition();
-            targetPos = arm2TargetPos;
-            decelerating = arm2Decelerating;
-            dDec = arm2DDec;
-            double dRemaining = Math.abs(targetPos - currentPos);
-            double direction = Math.signum(targetPos - currentPos);
-
-            if (Math.abs(dRemaining) > 50 && profile) {
-                // Check if we need to start decelerating
-                if (!decelerating && dRemaining <= dDec) {
-                    decelerating = true;
-                    arm2Decelerating = true;
-                }
-
-                // Calculate desired velocity
-                double vDesired;
-                if (decelerating) {
-                    vDesired = Math.sqrt(2 * A_DEC * dRemaining);
-                    vDesired = Math.min(vDesired, V_MAX);
-                } else {
-                    vDesired = V_MAX;
-                }
-
-                // Update target position
-                double delta = vDesired * direction * LOOP_TIME;
-                double newTarget = currentPos + delta;
-
-                target2pid = newTarget / ticks_in_degree_2; // Convert to degrees
-            }
-            else {
-                target2pid = target2;
-            }
-            PoseStorage.target2 = target2pid;
-        }
-
         public double ARM_Control_PID(@NonNull TelemetryPacket packet) {
+            double power2;
             double target1 = PoseStorage.target1; //NEW
-            packet.addLine("target1pos2:"+target2pid); //NEW
+            packet.addLine("target1pos2:"+target1); //NEW
+
+            int target2Ticks = (int)(target2 * ticks_in_degree_2);
+            int current2 = arm2.getCurrentPosition();
+
+            // ARM1: Switch between bang-bang and PID
+            double error2 = target2Ticks - current2;
+            arm2InPIDZone = (Math.abs(error2) < PID_ZONE);
+
             double theta1_actual = Math.toRadians(target1 + ARM1_OFFSET);
-            double theta2_actual = Math.toRadians(target1 + ARM1_OFFSET + target2pid + ARM2_OFFSET);
-            int arm2Pos = arm2.getCurrentPosition();
-            double pid2 = controller2.calculate(arm2Pos, (int)(target2pid*ticks_in_degree_2));
-            double ff2 = m2 * x2 * Math.cos(theta2_actual) * f2;
-            return (pid2 + ff2) * power;
+            double theta2_actual = Math.toRadians(target1 + ARM1_OFFSET + target2 + ARM2_OFFSET);
+
+            // ARM1: PID near target
+            if (arm2InPIDZone) {
+                double pid2 = controller2.calculate(current2, (int)(target2pid*ticks_in_degree_2));
+                double ff2 = m2 * x2 * Math.cos(theta2_actual) * f2;
+                power2 = (pid2+ff2);
+            }
+            else{
+                power2 = (Math.signum(error2) * BANG_BANG_POWER);
+            }
+
+            return power2*power;
         }
 
         @Override
@@ -190,10 +143,8 @@ public class ARM2_V3Robot {
                 if (time.seconds() > waitTime) {
                     if (!startMove){
                         PoseStorage.target2 = target2;
-                        initArmProfile(target2 * ticks_in_degree_2);
                         startMove = true;
                     }
-                    updateArmProfile();
                     double power = ARM_Control_PID(packet /*new*/);
                     packet.addLine("power2:" + power);
                     arm2.setPower(power);
@@ -253,5 +204,4 @@ public class ARM2_V3Robot {
     public Action liftRung2(double waitseconds,double seconds, double power) {return new LiftTarget(highRung2_2, waitseconds, seconds, power);}
     public Action liftRung2_First(double waitseconds,double seconds, double power) {return new LiftTarget(highRung2_First, waitseconds, seconds, power);}
     public Action liftRungFirst(double waitseconds,double seconds, double power) {return new LiftTarget(highRung2+0.75, waitseconds, seconds,power);}
-    public Action liftFloor(double waitseconds, double seconds, boolean profile) {return new LiftTarget(floor2,waitseconds,seconds, 1, profile);}
 }

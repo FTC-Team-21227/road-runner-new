@@ -225,7 +225,7 @@ public class ARM1_V2Robot {
     public Action waitLiftRung(double waitseconds) {return new waitLiftTarget(highRung, waitseconds);}
     public Action waitLiftRung2(double waitseconds) {return new waitLiftTarget(highRung2, waitseconds);}
     public Action waitLiftRung_First(double waitseconds) {return new waitLiftTarget(highRung_First, waitseconds);}
-    public Action waitLiftRung_FirstSecond(double waitseconds) {return new waitLiftTarget(highRung_First-2, waitseconds);}
+    public Action waitLiftRung_FirstSecond(double waitseconds) {return new waitLiftTarget(highRung_First-4, waitseconds);}
     public Action waitLiftWall(double waitseconds) {return new waitLiftTarget(wall, waitseconds);}
     public Action waitLiftWall2(double waitseconds) {return new waitLiftTarget(wall2, waitseconds);}
     public Action waitLiftWall_First(double waitseconds) {return new waitLiftTarget(wall_First, waitseconds);}

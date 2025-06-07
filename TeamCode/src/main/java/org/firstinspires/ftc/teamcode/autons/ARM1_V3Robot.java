@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.autons;
 
 import androidx.annotation.NonNull;
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.arcrobotics.ftclib.controller.PIDController;
@@ -65,6 +66,7 @@ public class ARM1_V3Robot {
         arm1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         controller1 = new PIDController(p1, i1, d1);
     }
+
     public class LiftTarget implements Action {
         ElapsedTime time = new ElapsedTime();
         boolean start;
@@ -74,28 +76,33 @@ public class ARM1_V3Robot {
         double runTime;
         boolean startMove;
         double power = 1;
-        public LiftTarget(double pos){
+        boolean profile = true;
+
+        public LiftTarget(double pos) {
             target1 = pos;
             start = false;
             startMove = false;
             waitTime = 0;
             runTime = 2;
         }
-        public LiftTarget(double pos, double tim){
+
+        public LiftTarget(double pos, double tim) {
             target1 = pos;
             start = false;
             startMove = false;
             waitTime = tim;
             runTime = 2;
         }
-        public LiftTarget(double pos, double tim, double runtime){
+
+        public LiftTarget(double pos, double tim, double runtime) {
             target1 = pos;
             start = false;
             startMove = false;
             waitTime = tim;
             runTime = runtime;
         }
-        public LiftTarget(double pos, double tim, double runtime, double pwr){
+
+        public LiftTarget(double pos, double tim, double runtime, double pwr) {
             target1 = pos;
             start = false;
             startMove = false;
@@ -103,6 +110,17 @@ public class ARM1_V3Robot {
             runTime = runtime;
             power = pwr;
         }
+
+        public LiftTarget(double pos, double tim, double runtime, double pwr, boolean prof) {
+            target1 = pos;
+            start = false;
+            startMove = false;
+            waitTime = tim;
+            runTime = runtime;
+            power = pwr;
+            profile = prof;
+        }
+
         private void initArmProfile(double targetPos) {
             arm1StartPos = arm1.getCurrentPosition();
             arm1TargetPos = targetPos;
@@ -110,6 +128,7 @@ public class ARM1_V3Robot {
             arm1DDec = (V_MAX * V_MAX) / (2 * A_DEC);
             arm1Decelerating = (dTotal <= arm1DDec);
         }
+
         private void updateArmProfile() {
             DcMotor motor;
             double currentPos, targetPos, dDec;
@@ -122,55 +141,62 @@ public class ARM1_V3Robot {
             double dRemaining = Math.abs(targetPos - currentPos);
             double direction = Math.signum(targetPos - currentPos);
 
-            // Check if we need to start decelerating
-            if (!decelerating && dRemaining <= dDec) {
-                decelerating = true;
-                arm1Decelerating = true;
-            }
+            if (Math.abs(dRemaining) > 50 && profile) {
+                // Check if we need to start decelerating
+                if (!decelerating && dRemaining <= dDec) {
+                    decelerating = true;
+                    arm1Decelerating = true;
+                }
 
-            // Calculate desired velocity
-            double vDesired;
-            if (decelerating) {
-                vDesired = Math.sqrt(2 * A_DEC * dRemaining);
-                vDesired = Math.min(vDesired, V_MAX);
+                // Calculate desired velocity
+                double vDesired;
+                if (decelerating) {
+                    vDesired = Math.sqrt(2 * A_DEC * dRemaining);
+                    vDesired = Math.min(vDesired, V_MAX);
+                } else {
+                    vDesired = V_MAX;
+                }
+
+                // Update target position
+                double delta = vDesired * direction * LOOP_TIME;
+                double newTarget = currentPos + delta;
+
+                target1pid = newTarget / ticks_in_degree_1; // Convert to degrees
             } else {
-                vDesired = V_MAX;
+                target1pid = target1;
             }
 
-            // Update target position
-            double delta = vDesired * direction * LOOP_TIME;
-            double newTarget = currentPos + delta;
-
-            target1pid = newTarget / ticks_in_degree_1; // Convert to degrees
             PoseStorage.target1 = target1pid;
         }
-        public double ARM_Control_PID(@NonNull TelemetryPacket packet /*NEW*/){
+
+        public double ARM_Control_PID(@NonNull TelemetryPacket packet /*NEW*/) {
             double target2 = PoseStorage.target2; //NEW
-            packet.addLine("target2pos1:"+target2); //NEW
+            packet.addLine("target2pos1:" + target2); //NEW
             double theta1_actual = Math.toRadians(target1pid + ARM1_OFFSET);
             double theta2_actual = Math.toRadians(target1pid + ARM1_OFFSET + target2 + ARM2_OFFSET);
             int arm1Pos = arm1.getCurrentPosition();
-            double pid1 = controller1.calculate(arm1Pos,(int)(target1pid*ticks_in_degree_1)); //PID calculation
+            double pid1 = controller1.calculate(arm1Pos, (int) (target1pid * ticks_in_degree_1)); //PID calculation
             double ff1 = (m1 * x1 * Math.cos(theta1_actual) + m2 * (L1 * Math.cos(theta1_actual) + x2 * Math.cos(theta2_actual))) * f1;
-            return ((pid1+ff1))*power;
+            return ((pid1 + ff1)) * power;
         }
+
         @Override
         public boolean run(@NonNull TelemetryPacket packet) {
             if (!start) {
                 time.reset();
                 start = true;
             }
-            packet.addLine("time.seconds():"+(time.seconds()));
-            packet.addLine("arm1pos:"+(arm1.getCurrentPosition()));
+            packet.addLine("time.seconds():" + (time.seconds()));
+            packet.addLine("arm1pos:" + (arm1.getCurrentPosition()));
 //            packet.addLine("target1pos:"+target1);
-            packet.addLine("target1pos:"+(int)(target1*ticks_in_degree_1));
-            if (time.seconds() < runTime+waitTime/* && Math.abs(arm1.getCurrentPosition() - arm1TargetPos) > 5*/) {
+            packet.addLine("target1pos:" + (int) (target1 * ticks_in_degree_1));
+            if (time.seconds() < runTime + waitTime/* && Math.abs(arm1.getCurrentPosition() - arm1TargetPos) > 5*/) {
 //                packet.addLine("still running 1");
-                if (time.seconds()>waitTime) {
+                if (time.seconds() > waitTime) {
                     //NEW
-                    if (!startMove){
+                    if (!startMove) {
                         PoseStorage.target1 = target1;
-                        initArmProfile(target1*ticks_in_degree_1);
+                        initArmProfile(target1 * ticks_in_degree_1);
                         startMove = true;
                     }
                     updateArmProfile();
@@ -178,59 +204,206 @@ public class ARM1_V3Robot {
                     packet.addLine("power1:" + power);
                     arm1.setPower(power);
                 }
+                FtcDashboard.getInstance().sendTelemetryPacket(packet);
                 return true;
             } else {
                 packet.addLine("Arm 1 time:" + time.seconds());
                 arm1.setPower(0);
+                FtcDashboard.getInstance().sendTelemetryPacket(packet);
                 return false;
             }
         }
     }
-    public Action liftHighBasket() {return new LiftTarget(highBasket);}
-    public Action liftRung() {return new LiftTarget(highRung);}
-    public Action liftRung2() {return new LiftTarget(highRung2);}
-    public Action liftRung_First() { return new LiftTarget(highRung_First);}
-    public Action liftWall() {return new LiftTarget(wall);}
-    public Action waitLiftWallWall() {return new LiftTarget(wallwall);}
-    public Action liftWall2() {return new LiftTarget(wall2);}
-    public Action liftWall_First() {return new LiftTarget(wall_First);}
-    public Action liftLowBasket() {return new LiftTarget(lowBasket);} //not tested i think
-    public Action liftFloor() {return new LiftTarget(floor);}
-    public Action liftDown() {return new LiftTarget(down);}
-    public Action liftSub() {return new LiftTarget(sub);}
-    public Action liftVertSub() {return new LiftTarget(vertSub1);}
-    public Action liftVertFloor() {return new LiftTarget(vertFloor1);}
-    public Action liftHighBasket(double waitseconds) {return new LiftTarget(highBasket, waitseconds);}
-    public Action liftRung(double waitseconds) {return new LiftTarget(highRung, waitseconds);}
-    public Action liftRung2(double waitseconds) {return new LiftTarget(highRung2, waitseconds);}
-    public Action liftRung_First(double waitseconds) {return new LiftTarget(highRung_First, waitseconds);}
-    public Action liftRung_FirstSecond(double waitseconds) {return new LiftTarget(highRung_First-2, waitseconds);}
-    public Action liftWall(double waitseconds) {return new LiftTarget(wall, waitseconds);}
-    public Action waitLiftWallWall(double waitseconds) {return new LiftTarget(wallwall,waitseconds);}
-    public Action liftWall2(double waitseconds) {return new LiftTarget(wall2, waitseconds);}
-    public Action liftWall_First(double waitseconds) {return new LiftTarget(wall_First, waitseconds);}
-    public Action liftLowBasket(double waitseconds) {return new LiftTarget(lowBasket, waitseconds);} //not tested i think
-    public Action liftFloor(double waitseconds) {return new LiftTarget(floor, waitseconds);}
-    public Action liftDown(double waitseconds) {return new LiftTarget(down, waitseconds);}
-    public Action liftSub(double waitseconds) {return new LiftTarget(sub, waitseconds);}
-    public Action liftVertSub(double waitseconds) {return new LiftTarget(vertSub1, waitseconds);}
-    public Action liftVertFloor(double waitseconds) {return new LiftTarget(vertFloor1, waitseconds);}
-    public Action liftHighBasket(double waitseconds, double seconds) {return new LiftTarget(highBasket, waitseconds, seconds);}
-    public Action liftRung(double waitseconds, double seconds) {return new LiftTarget(highRung, waitseconds, seconds);}
-    public Action liftRung2(double waitseconds, double seconds) {return new LiftTarget(highRung2, waitseconds, seconds);}
-    public Action liftRung_First(double waitseconds, double seconds) {return new LiftTarget(highRung_First, waitseconds, seconds);}
-    public Action liftWall(double waitseconds, double seconds) {return new LiftTarget(wall, waitseconds, seconds);}
-    public Action liftWall2(double waitseconds, double seconds) {return new LiftTarget(wall2, waitseconds, seconds);}
-    public Action liftWall_First(double waitseconds, double seconds) {return new LiftTarget(wall_First, waitseconds, seconds);}
-    public Action liftLowBasket(double waitseconds, double seconds) {return new LiftTarget(lowBasket, waitseconds, seconds);} //not tested i think
-    public Action liftFloor(double waitseconds, double seconds) {return new LiftTarget(floor, waitseconds, seconds);}
-    public Action liftDown(double waitseconds, double seconds) {return new LiftTarget(down, waitseconds, seconds);}
-    public Action liftSub(double waitseconds, double seconds) {return new LiftTarget(sub, waitseconds, seconds);}
-    public Action liftVertSub(double waitseconds,double seconds) {return new LiftTarget(vertSub1,waitseconds,seconds);}
-    public Action liftVertFloor(double waitseconds,double seconds) {return new LiftTarget(vertFloor1,waitseconds,seconds);}
-    public Action liftFloor(double waitseconds, double seconds, double power) {return new LiftTarget(floor, waitseconds, seconds, power);}
-    public Action liftSub(double waitseconds, double seconds, double power) {return new LiftTarget(sub, waitseconds, seconds, power);}
-    public Action liftDown(double waitseconds, double seconds, double power) {return new LiftTarget(down, waitseconds, seconds, power);}
-    public Action liftVertSub(double waitseconds,double seconds,double power) {return new LiftTarget(vertSub1,waitseconds,seconds,power);}
-    public Action liftVertFloor(double waitseconds,double seconds,double power) {return new LiftTarget(vertFloor1,waitseconds,seconds,power);}
+
+    public Action liftHighBasket() {
+        return new LiftTarget(highBasket);
+    }
+
+    public Action liftRung() {
+        return new LiftTarget(highRung);
+    }
+
+    public Action liftRung2() {
+        return new LiftTarget(highRung2);
+    }
+
+    public Action liftRung_First() {
+        return new LiftTarget(highRung_First);
+    }
+
+    public Action liftWall() {
+        return new LiftTarget(wall);
+    }
+
+    public Action waitLiftWallWall() {
+        return new LiftTarget(wallwall);
+    }
+
+    public Action liftWall2() {
+        return new LiftTarget(wall2);
+    }
+
+    public Action liftWall_First() {
+        return new LiftTarget(wall_First);
+    }
+
+    public Action liftLowBasket() {
+        return new LiftTarget(lowBasket);
+    } //not tested i think
+
+    public Action liftFloor() {
+        return new LiftTarget(floor);
+    }
+
+    public Action liftDown() {
+        return new LiftTarget(down);
+    }
+
+    public Action liftSub() {
+        return new LiftTarget(sub);
+    }
+
+    public Action liftVertSub() {
+        return new LiftTarget(vertSub1);
+    }
+
+    public Action liftVertFloor() {
+        return new LiftTarget(vertFloor1);
+    }
+
+    public Action liftHighBasket(double waitseconds) {
+        return new LiftTarget(highBasket, waitseconds);
+    }
+
+    public Action liftRung(double waitseconds) {
+        return new LiftTarget(highRung, waitseconds);
+    }
+
+    public Action liftRung2(double waitseconds) {
+        return new LiftTarget(highRung2, waitseconds);
+    }
+
+    public Action liftRung_First(double waitseconds) {
+        return new LiftTarget(highRung_First, waitseconds);
+    }
+
+    public Action liftRung_FirstSecond(double waitseconds) {
+        return new LiftTarget(highRung_First - 4, waitseconds);
+    }
+
+    public Action liftWall(double waitseconds) {
+        return new LiftTarget(wall, waitseconds);
+    }
+
+    public Action waitLiftWallWall(double waitseconds) {
+        return new LiftTarget(wallwall, waitseconds);
+    }
+
+    public Action liftWall2(double waitseconds) {
+        return new LiftTarget(wall2, waitseconds);
+    }
+
+    public Action liftWall_First(double waitseconds) {
+        return new LiftTarget(wall_First, waitseconds);
+    }
+
+    public Action liftLowBasket(double waitseconds) {
+        return new LiftTarget(lowBasket, waitseconds);
+    } //not tested i think
+
+    public Action liftFloor(double waitseconds) {
+        return new LiftTarget(floor, waitseconds);
+    }
+
+    public Action liftDown(double waitseconds) {
+        return new LiftTarget(down, waitseconds);
+    }
+
+    public Action liftSub(double waitseconds) {
+        return new LiftTarget(sub, waitseconds);
+    }
+
+    public Action liftVertSub(double waitseconds) {
+        return new LiftTarget(vertSub1, waitseconds);
+    }
+
+    public Action liftVertFloor(double waitseconds) {
+        return new LiftTarget(vertFloor1, waitseconds);
+    }
+
+    public Action liftHighBasket(double waitseconds, double seconds) {
+        return new LiftTarget(highBasket, waitseconds, seconds);
+    }
+
+    public Action liftRung(double waitseconds, double seconds) {
+        return new LiftTarget(highRung, waitseconds, seconds);
+    }
+
+    public Action liftRung2(double waitseconds, double seconds) {
+        return new LiftTarget(highRung2, waitseconds, seconds);
+    }
+
+    public Action liftRung_First(double waitseconds, double seconds) {
+        return new LiftTarget(highRung_First, waitseconds, seconds);
+    }
+
+    public Action liftWall(double waitseconds, double seconds) {
+        return new LiftTarget(wall, waitseconds, seconds);
+    }
+
+    public Action liftWall2(double waitseconds, double seconds) {
+        return new LiftTarget(wall2, waitseconds, seconds);
+    }
+
+    public Action liftWall_First(double waitseconds, double seconds) {
+        return new LiftTarget(wall_First, waitseconds, seconds);
+    }
+
+    public Action liftLowBasket(double waitseconds, double seconds) {
+        return new LiftTarget(lowBasket, waitseconds, seconds);
+    } //not tested i think
+
+    public Action liftFloor(double waitseconds, double seconds) {
+        return new LiftTarget(floor, waitseconds, seconds);
+    }
+
+    public Action liftDown(double waitseconds, double seconds) {
+        return new LiftTarget(down, waitseconds, seconds);
+    }
+
+    public Action liftSub(double waitseconds, double seconds) {
+        return new LiftTarget(sub, waitseconds, seconds);
+    }
+
+    public Action liftVertSub(double waitseconds, double seconds) {
+        return new LiftTarget(vertSub1, waitseconds, seconds);
+    }
+
+    public Action liftVertFloor(double waitseconds, double seconds) {
+        return new LiftTarget(vertFloor1, waitseconds, seconds);
+    }
+
+    public Action liftFloor(double waitseconds, double seconds, double power) {
+        return new LiftTarget(floor, waitseconds, seconds, power);
+    }
+
+    public Action liftSub(double waitseconds, double seconds, double power) {
+        return new LiftTarget(sub, waitseconds, seconds, power);
+    }
+
+    public Action liftDown(double waitseconds, double seconds, double power) {
+        return new LiftTarget(down, waitseconds, seconds, power);
+    }
+
+    public Action liftVertSub(double waitseconds, double seconds, double power) {
+        return new LiftTarget(vertSub1, waitseconds, seconds, power);
+    }
+
+    public Action liftVertFloor(double waitseconds, double seconds, double power) {
+        return new LiftTarget(vertFloor1, waitseconds, seconds, power);
+    }
+
+    public Action liftFloor(double waitseconds, double seconds, boolean profile) {
+        return new LiftTarget(floor, waitseconds, seconds, 1, profile);
+    }
 }

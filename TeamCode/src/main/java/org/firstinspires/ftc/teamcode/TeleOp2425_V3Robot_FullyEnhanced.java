@@ -124,6 +124,7 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
     double Motor_power_FR;
     double Motor_Rotation_power;
     double Motor_Power;
+    double Motor_Trans_Power;
     double tim;
     boolean ARM1calibrated = true;
     boolean ARM2calibrated = true;
@@ -204,7 +205,7 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
             telemetry.addData("Yay1!","Yay1!");
         }
         catch (Exception e){
-            initialPose = new Pose2d(0,0,0);
+            initialPose = new Pose2d(0,0,Math.toRadians(90));
             telemetry.addData("No!","No!");
         }
         initialHeading = Math.toDegrees(initialPose.heading.toDouble());
@@ -242,6 +243,8 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
                 x = pose.position.x;
                 y = pose.position.y;
                 inSub = inSub();
+                arm1Pos = ARM1.getCurrentPosition();
+                arm2Pos = ARM2.getCurrentPosition();
                 // Put loop blocks here.
                 if (gamepad2.b){
                     holdRobotPosition(currentVel);
@@ -290,7 +293,7 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
                 }
                 //reset imu if necessary
                 if (gamepad2.back && !back2) {
-                    drive = new MecanumDrive_Lock(hardwareMap,new Pose2d(drive.localizer.getPose().position,0));
+                    drive = new MecanumDrive_Lock(hardwareMap,new Pose2d(pose.position,Math.toRadians(90)));
                     try {
                         Thread.sleep(300);
                     } catch (InterruptedException e) {
@@ -305,14 +308,14 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
                     initialHeading = 0;
                     Targeting_Angle = 0;
                     Heading_Angle = 0;
-                    if (mode.equals("specimenCycle") || mode.equals("specimenCollect")) drive = new MecanumDrive_Lock(hardwareMap,new Pose2d(39,66,0));
+                    if (mode.equals("specimenCycle") || mode.equals("specimenCollect")) drive = new MecanumDrive_Lock(hardwareMap,new Pose2d(8,-2,Math.toRadians(90)));
                     else if (mode.equals("sample")) {
-                        drive = new MecanumDrive_Lock(hardwareMap,new Pose2d(57,96,Math.toRadians(-90)));
+                        drive = new MecanumDrive_Lock(hardwareMap,new Pose2d(10,-16,Math.toRadians(0)));
 //                        initialHeading = -90;
                         Targeting_Angle = -90;
                         Heading_Angle = -90;
                     }
-                    else drive = new MecanumDrive_Lock(hardwareMap,new Pose2d(0,0,0));
+                    else drive = new MecanumDrive_Lock(hardwareMap,new Pose2d(pose.position,Math.toRadians(90)));
                     try {
                         Thread.sleep(300);
                     } catch (InterruptedException e) {
@@ -326,6 +329,7 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
                 telemetry.addData("state", state);
                 telemetry.addData("eManual",eManual);
                 telemetry.addData("manual", manual);
+                telemetry.addData("inSub",inSub);
                 telemetry.addData("Heading", Heading_Angle);
                 telemetry.addData("Initial Heading", initialHeading);
                 telemetry.addData("Targeting Angle", Targeting_Angle);
@@ -334,6 +338,7 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
                 telemetry.addData("FWD Power", Motor_fwd_power);
                 telemetry.addData("IMU_Rotation Power", imu_rotation);
                 telemetry.addData("Rotation Power", Motor_Rotation_power);
+                telemetry.addData("Motor_Translation Power", Motor_Trans_Power);
                 telemetry.addData("Drive x", x);
                 telemetry.addData("Drive y", y);
                 telemetry.addData("ARM1Pos: ", arm1Pos/ticks_in_degree_1);
@@ -356,6 +361,12 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
                 telemetry.addData("ARM1 Sensor", ARM1Sensor.isPressed());
                 telemetry.addData("ARM2 Sensor", ARM2Sensor.isPressed());
                 telemetry.update();
+
+                TelemetryPacket packet = new TelemetryPacket();
+                packet.fieldOverlay().setStroke("#3F51B5");
+                Drawing.drawRobot(packet.fieldOverlay(), pose);
+                FtcDashboard.getInstance().sendTelemetryPacket(packet);
+
             }
         }
     }
@@ -377,6 +388,7 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
         }
     }
     private void cycleSpecimen() {
+        //use a different drive for this, if we even want to use roadrunner actions for this
         if (!startedHolding) {
             // Calculate stopping distance using current velocity
 
@@ -488,7 +500,7 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
             }
         }
         else if (state.equals("reversedFloor")){
-            if (getRuntime() - stateTime > 0.25) {
+            if (getRuntime() - stateTime > 0) {
                 if (intake_angle != intake_AngleFloor) {
                     Intake_Angle.setPosition(intake_AngleFloor);
                     intake_angle = intake_AngleFloor;
@@ -586,29 +598,32 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
         rightTrigger2Pressed = gamepad2.right_trigger > 0.1;
     }
     private void Control_Enhanced_States(){ //control driving
-        arm1Pos = ARM1.getCurrentPosition();
-        arm2Pos = ARM2.getCurrentPosition();
-        if (eState.equals("enteringSub") && (arm1Pos/ticks_in_degree_1 < sub1 + 20)) { //Intake Angle 0, swivel Claw Angle to face the basket
-            double clampedPos = Math.max(sub1, arm1Pos);
-            Motor_Power = 0.4 + (1.0 - 0.4) * (clampedPos - sub1) / 20;
-            lockedMode = true;
-        }
-        else if (eState.equals("exitingSub")) {
-            double clampedPos = Math.min(highBasket1, arm1Pos);
-            if ((arm1Pos / ticks_in_degree_1 > highBasket1-20)){
-                Motor_Power = 0.4 + (1.0 - 0.4) * (highBasket1 - clampedPos) / 20;
+        if (eState.equals("enteringSub")) { //Intake Angle 0, swivel Claw Angle to face the basket
+            double clampedPos = Math.max(sub1, arm1Pos / ticks_in_degree_1);
+            if (arm1Pos/ticks_in_degree_1 < sub1 + 40){
+                Motor_Trans_Power = 0.4 + (1.0 - 0.4) * (clampedPos - sub1) / 20;
             }
             else {
-                Motor_Power = 1.0;
+                Motor_Trans_Power = 1.0;
+            }
+            lockedMode = false;
+        }
+        else if (eState.equals("exitingSub")) {
+            double clampedPos = Math.min(highBasket1, arm1Pos / ticks_in_degree_1);
+            if (arm1Pos / ticks_in_degree_1 > highBasket1-40){
+                Motor_Trans_Power = 0.4 + (1.0 - 0.4) * (highBasket1 - clampedPos) / 40;
+            }
+            else {
+                Motor_Trans_Power = 1.0;
             }
             lockedMode = false;
         }
         if (mode.equals("specimenCycle")){
-            Motor_Power = 0.4;
+            Motor_Trans_Power = 0.4;
             lockedMode = false;
         }
         if (hanging){
-            Motor_Power = 1.0;
+            Motor_Trans_Power = 1.0;
             lockedMode = false;
         }
     }
@@ -619,14 +634,14 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
         double theta1_actual = Math.toRadians(target1pid + ARM1_OFFSET);
         double theta2_actual = Math.toRadians(target1pid + ARM1_OFFSET + target2pid + ARM2_OFFSET);
         controller1.setPID(p1,i1,d1);
-        arm1Pos = ARM1.getCurrentPosition();
+//        arm1Pos = ARM1.getCurrentPosition();
         double pid1 = controller1.calculate(arm1Pos,(int)(target1pid*ticks_in_degree_1)); //PID calculation
         double ff1 = (m1 * x1 * Math.cos(theta1_actual) + m2 * (L1 * Math.cos(theta1_actual) + x2 * Math.cos(theta2_actual))) * f1;
         double power1 = pid1 + ff1;
         ARM1.setPower(power1*Lift_Power); //set the power
 
         controller2.setPID(p2,i2,d2);
-        arm2Pos = ARM2.getCurrentPosition();
+//        arm2Pos = ARM2.getCurrentPosition();
         double pid2 = controller2.calculate(arm2Pos, (int)(target2pid*ticks_in_degree_2));
         double ff2 = m2 * x2 * Math.cos(theta2_actual) * f2;
         double power2 = pid2 + ff2;
@@ -654,8 +669,8 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
 //    }
     private boolean inSub() {
         // Check if X and Y are both between 48 and 96 inches
-        return (x >= 48 && x <= 96) &&
-                (y >= 48 && y <= 96);
+        return (Math.abs(x) <= 16) &&
+                (Math.abs(y) <= 28);
     }
     private void ARM_Calibration(){
         //resets each motor to 0 when the touch sensor is pressed, and doesn't enter the if statement afterwards
@@ -685,9 +700,11 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
     private void ARM_SetTargets() {
         if (gamepad2.y) { // Basket Mode
             mode = "sample";
+            eState = "a";
             // Motion profiling OFF
         } else if (gamepad2.a) { // Specimen Collection
             mode = "specimenCollect";
+            eState = "a";
             // Motion profiling ON
         } else if (gamepad2.x) { // Specimen Cycle
             mode = "specimenCycle";
@@ -711,21 +728,21 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
         }
         if (gamepad1.right_bumper && mode.equals("sample")){
             eState = "exitingSub";
-            state = "sub";
+            state = "enterSub";
             target1 = sub1;
             target2 = sub2;
             eManual = false;
             manual = false;
         }
-        if (eState.equals("exitingSub") && !inSub && mode.equals("sample") && !eManual){
+        if (eState.equals("exitingSub") && !state.equals("droppedHighBasket") && !inSub && mode.equals("sample") && !eManual){
             state = "highBasket";
             target1 = highBasket1;
             target2 = highBasket2;
         }
-        if (state.equals("droppedHighBasket") && getRuntime() - stateTime > 0.2 && mode.equals("sample") && !eManual) {
-            if (!state.equals("sub")) {
+        if (state.equals("droppedHighBasket") && getRuntime() - stateTime > 0.5 && mode.equals("sample") && !eManual) {
+            if (!state.equals("enterSub")) {
                 eState = "enteringSub";
-                state = "sub";
+                state = "enterSub";
                 target1 = sub1;
                 target2 = sub2;
             }
@@ -738,26 +755,26 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
         }
         if (gamepad1.right_bumper && mode.equals("specimenCollect")){
             eState = "exitingSub";
-            state = "sub";
+            state = "enterSub";
             target1 = sub1;
             target2 = sub2;
             eManual = false;
             manual = false;
         }
-        if (eState.equals("exitingSub") && !inSub && mode.equals("specimenCollect") && !eManual){
+        if (eState.equals("exitingSub") && !state.equals("droppedObs") && !inSub && mode.equals("specimenCollect") && !eManual){
             state = "drop";
             target1 = highRung1_2;
             target2 = down2;
         }
         if (state.equals("droppedObs") && getRuntime() - stateTime > 0.2 && mode.equals("specimenCollect") && !eManual) {
-            if (!state.equals("sub")) {
+            if (!state.equals("enterSub")) {
                 eState = "enteringSub";
-                state = "sub";
+                state = "enterSub";
                 target1 = sub1;
                 target2 = sub2;
             }
         }
-        if (gamepad1.right_bumper && mode.equals("specimenCollect")){
+        if (gamepad1.right_bumper && mode.equals("specimenCycle")){
             state = "highRung";
             target1 = highRung1_2;
             target2 = highRung2_2;
@@ -848,28 +865,28 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
         } else if (gamepad1.dpad_down) {
             target2 -= 2.40399638714/3;
         }
-        if (Target1 != target1) {
-            Target1 = target1;
-            initArmProfile(1, Target1*ticks_in_degree_1);
-        }
-        if (Target2 != target2){
-            Target2 = target2;
-            initArmProfile(2, Target2*ticks_in_degree_2);
-        }
-        // Update ARM1 target
-        if (Math.abs(ARM1.getCurrentPosition() - arm1TargetPos) > 5) {
-            updateArmProfile(1);
-        }
-        else{
-            target1pid = Target1;
-        }
+//        if (Target1 != target1) {
+//            Target1 = target1;
+//            initArmProfile(1, Target1*ticks_in_degree_1);
+//        }
+//        if (Target2 != target2){
+//            Target2 = target2;
+//            initArmProfile(2, Target2*ticks_in_degree_2);
+//        }
+//        // Update ARM1 target
+//        if (Math.abs(ARM1.getCurrentPosition() - arm1TargetPos) > 5) {
+//            updateArmProfile(1);
+//        }
+//        else{
+            target1pid = target1;
+//        }
         // Update ARM2 target
-        if (Math.abs(ARM2.getCurrentPosition() - arm2TargetPos) > 5) {
-            updateArmProfile(2);
-        }
-        else{
-            target2pid = Target2;
-        }
+//        if (Math.abs(ARM2.getCurrentPosition() - arm2TargetPos) > 5) {
+//            updateArmProfile(2);
+//        }
+//        else{
+            target2pid = target2;
+//        }
     }
     private void initArmProfile(int armNumber, double targetPos) {
         if (armNumber == 1) {
@@ -943,7 +960,7 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
         controller1 = new PIDController(p1, i1, d1);
         controller2 = new PIDController(p2, i2, d2);
 
-        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
+//        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
         W_FR.setDirection(DcMotor.Direction.FORWARD);
         W_FL.setDirection(DcMotor.Direction.REVERSE);
@@ -967,14 +984,15 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
         target1 = ARM1.getCurrentPosition()/ticks_in_degree_1;
         Target1 = target1;
         target1pid = target1;
+        arm1TargetPos = target1 * ticks_in_degree_1;
         ARM2.setDirection(DcMotor.Direction.REVERSE);
         ARM2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         ARM2.setPower(0);
         target2 = ARM2.getCurrentPosition()/ticks_in_degree_2;
         Target2 = target2;
         target2pid = target2;
+        arm2TargetPos = target2 * ticks_in_degree_2;
         telemetry.addData("Claw",Claw.getPosition());
-        telemetry.update();
         Claw.scaleRange(clawScale0,clawScale1);
         Intake_Angle.scaleRange(intake_AngleScale0, intake_AngleScale1);
         Claw_Angle.scaleRange(claw_AngleScale0, claw_AngleScale1);
@@ -985,6 +1003,12 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
 
         Targeting_Angle = initialHeading;
 
+        telemetry.addData("arm1 pos", ARM1.getCurrentPosition());
+        telemetry.addData("arm2 pos", ARM2.getCurrentPosition());
+        telemetry.addData("arm1 target", target1);
+        telemetry.addData("arm2. target", target2);
+
+        telemetry.update();
         waitForStart();
     }
 
@@ -994,7 +1018,7 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
     private void Calculate_IMU_Rotation_Power() {
         double Angle_Difference;
         try {
-            Heading_Angle = Math.toDegrees(drive.localizer.getPose().heading.toDouble()); // + initialHeading; //degrees
+            Heading_Angle = Math.toDegrees(drive.localizer.getPose().heading.toDouble()) - 90; // + initialHeading; //degrees
         }
         catch (Exception e){
             Heading_Angle = Targeting_Angle;
@@ -1028,8 +1052,8 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
         double mag;
         double x;
         double y;
-        if (gamepad2.dpad_up) {eManual = true; Motor_Power = 1.0;}
-        if (gamepad2.dpad_down) {eManual = true; Motor_Power = 0.4;}
+        if (gamepad2.dpad_up) {eManual = true; Motor_Trans_Power = 1.0;}
+        if (gamepad2.dpad_down) {eManual = true; Motor_Trans_Power = 0.4;}
         x = gamepad1.left_stick_x;
         y = gamepad1.left_stick_y;
         mag = Math.sqrt(y*y + x*x);
@@ -1039,8 +1063,8 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
         }
         Motor_FWD_input = y * mag * mag;
         Motor_Side_input = -x * mag * mag;
-        Motor_fwd_power = Math.cos(Heading_Angle / 180 * Math.PI) * Motor_FWD_input - Math.sin(Heading_Angle / 180 * Math.PI) * Motor_Side_input;
-        Motor_side_power = (Math.cos(Heading_Angle / 180 * Math.PI) * Motor_Side_input + Math.sin(Heading_Angle / 180 * Math.PI) * Motor_FWD_input) / 0.7736350635; //*1.5
+        Motor_fwd_power = Math.cos(Heading_Angle / 180 * Math.PI) * Motor_FWD_input - Math.sin(Heading_Angle / 180 * Math.PI) * Motor_Side_input * Motor_Trans_Power;
+        Motor_side_power = (Math.cos(Heading_Angle / 180 * Math.PI) * Motor_Side_input + Math.sin(Heading_Angle / 180 * Math.PI) * Motor_FWD_input) / 0.7736350635 * Motor_Trans_Power; //*1.5
         Motor_Rotation_power = gamepad1.right_stick_x * 0.7 + imu_rotation; //0.5
         Motor_power_BL = -(((Motor_fwd_power - Motor_side_power) - Motor_Rotation_power) * Motor_Power);
         Motor_power_BR = -((Motor_fwd_power + Motor_side_power + Motor_Rotation_power) * Motor_Power);
