@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode.vision;
 
-import com.acmerobotics.dashboard.config.Config;
+//import com.acmerobotics.dashboard.config.Config;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.opencv.core.Core;
@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 
-@Config
+//@Config
 public class YellowPipeline extends OpenCvPipeline {
     public static Scalar lowerYellow = new Scalar(130, 130, 0);
     public static Scalar upperYellow = new Scalar(255, 175, 110);
