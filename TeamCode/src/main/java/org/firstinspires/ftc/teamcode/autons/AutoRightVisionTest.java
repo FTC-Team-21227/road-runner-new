@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.autons;
 
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
@@ -14,13 +15,13 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 
-@Autonomous(name = "REDRIGHT_6+1_CV")
-public class AUTON2025REDRIGHT_V4Robot_4 extends LinearOpMode {
+@Autonomous(name = "YELLOWRIGHT_CVTest")
+public class AutoRightVisionTest extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         Pose2d initialPose = new Pose2d(10.5, -63.3, Math.toRadians(90));
         MecanumDrive drive = new MecanumDrive(hardwareMap, initialPose);
-        PipeCamera cam = new PipeCamera(hardwareMap,telemetry,true,"yellow", "yellow");
+        PipeCamera cam = new PipeCamera(hardwareMap,telemetry,true,"yellow", true);
 
         ARM1_V3Robot arm1 = new ARM1_V3Robot(hardwareMap);
         ARM2_V3Robot arm2 = new ARM2_V3Robot(hardwareMap);
@@ -37,225 +38,225 @@ public class AUTON2025REDRIGHT_V4Robot_4 extends LinearOpMode {
 //        pushing timing to the limits
 
         double X = 0;
-        boolean cont = true;
-        boolean a = false;
-        boolean b= false;
-        boolean x= false;
-        boolean y= false;
-        boolean up= false;
-        boolean down= false;
-        boolean left= false;
-        boolean right= false;
-        boolean RB= false;
-        boolean LB= false;
-        boolean back= false;
-        boolean decimal = false;
-        boolean right_stick_button = false;
-        boolean start= false;
-        boolean LS = false;
-        while (cont && !isStopRequested()){
-            if (gamepad1.a && !a){
-                if (decimal){
-                    X += 0.1;
-                }
-                else {
-                    X = 10 * X + 1;
-                }
-            }
-            a = gamepad1.a;
-            if (gamepad1.b && !b){
-                if (decimal){
-                    X += 0.2;
-                }
-                else {X = 10*X+2;}
-            }
-            b = gamepad1.b;
-            if (gamepad1.x && !x){
-                if (decimal){
-                    X += 0.3;
-                }
-                else {X = 10*X+3;}
-            }
-            x = gamepad1.x;
-            if (gamepad1.y && !y){
-                if (decimal){
-                    X += 0.4;
-                }
-                else {X = 10*X+4;}
-            }
-            y = gamepad1.y;
-            if (gamepad1.dpad_up && !up){
-                if (decimal){
-                    X += 0.5;
-                }
-                else {X = 10*X+5;}
-            }
-            up = gamepad1.dpad_up;
-            if (gamepad1.dpad_down && !down){
-                if (decimal){
-                    X += 0.6;
-                }
-                else {X = 10*X+6;}
-            }
-            down = gamepad1.dpad_down;
-            if (gamepad1.dpad_left && !left){
-                if (decimal){
-                    X += 0.7;
-                }
-                else {X = 10*X+7;}
-            }
-            left = gamepad1.dpad_left;
-            if (gamepad1.dpad_right && !right){
-                if (decimal){
-                    X += 0.8;
-                }
-                else {X = 10*X+8;}
-            }
-            right = gamepad1.dpad_right;
-            if (gamepad1.right_bumper && !RB){
-                if (decimal){
-                    X += 0.9;
-                }
-                else {X = 10*X+9;}
-            }
-            RB = gamepad1.right_bumper;
-            if (gamepad1.left_bumper && !LB){
-                if (decimal){
-                    X += 0.0;
-                }
-                else {X = 10*X+0;}
-            }
-            LB = gamepad1.left_bumper;
-            if (gamepad1.left_stick_button && !LS){
-                X *= -1;
-            }
-            LS = gamepad1.left_stick_button;
-            if (gamepad1.back && !back){
-                decimal = true;
-            }
-            back = gamepad1.back;
-            if (gamepad1.right_stick_button && !right_stick_button){
-                X = 0;
-                decimal = false;
-            }
-            right_stick_button = gamepad1.right_stick_button;
-            if (gamepad1.start && !start){
-                cont = false;
-            }
-            start = gamepad1.start;
-            telemetry.addData("Pos X ",X);
-            if (decimal){
-                telemetry.addData("In decimal mode ", "only 1 decimal place permitted");
-            }
-            telemetry.addLine("a=1, b=2, x=3, y=4, up=5, down=6, left=7, right=8, RB=9, LB=0, back=decimal, Left Stick Button = negative,  start = continue, Right Stick Button = erase");
-            telemetry.update();
-        }
+//        boolean cont = true;
+//        boolean a = false;
+//        boolean b= false;
+//        boolean x= false;
+//        boolean y= false;
+//        boolean up= false;
+//        boolean down= false;
+//        boolean left= false;
+//        boolean right= false;
+//        boolean RB= false;
+//        boolean LB= false;
+//        boolean back= false;
+//        boolean decimal = false;
+//        boolean right_stick_button = false;
+//        boolean start= false;
+//        boolean LS = false;
+//        while (cont && !isStopRequested()){
+//            if (gamepad1.a && !a){
+//                if (decimal){
+//                    X += 0.1;
+//                }
+//                else {
+//                    X = 10 * X + 1;
+//                }
+//            }
+//            a = gamepad1.a;
+//            if (gamepad1.b && !b){
+//                if (decimal){
+//                    X += 0.2;
+//                }
+//                else {X = 10*X+2;}
+//            }
+//            b = gamepad1.b;
+//            if (gamepad1.x && !x){
+//                if (decimal){
+//                    X += 0.3;
+//                }
+//                else {X = 10*X+3;}
+//            }
+//            x = gamepad1.x;
+//            if (gamepad1.y && !y){
+//                if (decimal){
+//                    X += 0.4;
+//                }
+//                else {X = 10*X+4;}
+//            }
+//            y = gamepad1.y;
+//            if (gamepad1.dpad_up && !up){
+//                if (decimal){
+//                    X += 0.5;
+//                }
+//                else {X = 10*X+5;}
+//            }
+//            up = gamepad1.dpad_up;
+//            if (gamepad1.dpad_down && !down){
+//                if (decimal){
+//                    X += 0.6;
+//                }
+//                else {X = 10*X+6;}
+//            }
+//            down = gamepad1.dpad_down;
+//            if (gamepad1.dpad_left && !left){
+//                if (decimal){
+//                    X += 0.7;
+//                }
+//                else {X = 10*X+7;}
+//            }
+//            left = gamepad1.dpad_left;
+//            if (gamepad1.dpad_right && !right){
+//                if (decimal){
+//                    X += 0.8;
+//                }
+//                else {X = 10*X+8;}
+//            }
+//            right = gamepad1.dpad_right;
+//            if (gamepad1.right_bumper && !RB){
+//                if (decimal){
+//                    X += 0.9;
+//                }
+//                else {X = 10*X+9;}
+//            }
+//            RB = gamepad1.right_bumper;
+//            if (gamepad1.left_bumper && !LB){
+//                if (decimal){
+//                    X += 0.0;
+//                }
+//                else {X = 10*X+0;}
+//            }
+//            LB = gamepad1.left_bumper;
+//            if (gamepad1.left_stick_button && !LS){
+//                X *= -1;
+//            }
+//            LS = gamepad1.left_stick_button;
+//            if (gamepad1.back && !back){
+//                decimal = true;
+//            }
+//            back = gamepad1.back;
+//            if (gamepad1.right_stick_button && !right_stick_button){
+//                X = 0;
+//                decimal = false;
+//            }
+//            right_stick_button = gamepad1.right_stick_button;
+//            if (gamepad1.start && !start){
+//                cont = false;
+//            }
+//            start = gamepad1.start;
+//            telemetry.addData("Pos X ",X);
+//            if (decimal){
+//                telemetry.addData("In decimal mode ", "only 1 decimal place permitted");
+//            }
+//            telemetry.addLine("a=1, b=2, x=3, y=4, up=5, down=6, left=7, right=8, RB=9, LB=0, back=decimal, Left Stick Button = negative,  start = continue, Right Stick Button = erase");
+//            telemetry.update();
+//        }
         double Y = 0;
-        cont = true;
-        back = false;
-        while (cont && !isStopRequested()){
-            if (gamepad1.a && !a){
-                if (decimal){
-                    Y += 0.1;
-                }
-                else {
-                    Y = 10 * Y + 1;
-                }
-            }
-            a = gamepad1.a;
-            if (gamepad1.b && !b){
-                if (decimal){
-                    Y += 0.2;
-                }
-                else {Y = 10*Y+2;}
-            }
-            b = gamepad1.b;
-            if (gamepad1.x && !x){
-                if (decimal){
-                    Y += 0.3;
-                }
-                else {Y = 10*Y+3;}
-            }
-            x = gamepad1.x;
-            if (gamepad1.y && !y){
-                if (decimal){
-                    Y += 0.4;
-                }
-                else {Y = 10*Y+4;}
-            }
-            y = gamepad1.y;
-            if (gamepad1.dpad_up && !up){
-                if (decimal){
-                    Y += 0.5;
-                }
-                else {Y = 10*Y+5;}
-            }
-            up = gamepad1.dpad_up;
-            if (gamepad1.dpad_down && !down){
-                if (decimal){
-                    Y += 0.6;
-                }
-                else {Y = 10*Y+6;}
-            }
-            down = gamepad1.dpad_down;
-            if (gamepad1.dpad_left && !left){
-                if (decimal){
-                    Y += 0.7;
-                }
-                else {Y = 10*Y+7;}
-            }
-            left = gamepad1.dpad_left;
-            if (gamepad1.dpad_right && !right){
-                if (decimal){
-                    Y += 0.8;
-                }
-                else {Y = 10*Y+8;}
-            }
-            right = gamepad1.dpad_right;
-            if (gamepad1.right_bumper && !RB){
-                if (decimal){
-                    Y += 0.9;
-                }
-                else {Y = 10*Y+9;}
-            }
-            RB = gamepad1.right_bumper;
-            if (gamepad1.left_bumper && !LB){
-                if (decimal){
-                    Y += 0.0;
-                }
-                else {Y = 10*Y+0;}
-            }
-            LB = gamepad1.left_bumper;
-            if (gamepad1.back && !back){
-                decimal = true;
-            }
-            back = gamepad1.back;
-            if (gamepad1.left_stick_button && !LS){
-                Y *= -1;
-            }
-            LS = gamepad1.left_stick_button;
-            if (gamepad1.right_stick_button && !right_stick_button){
-                Y = 0;
-                decimal = false;
-            }
-            right_stick_button = gamepad1.right_stick_button;
-            if (gamepad1.start && !start){
-                cont = false;
-            }
-            start = gamepad1.start;
-            telemetry.addData("Pos Y ",Y);
-            if (decimal){
-                telemetry.addData("In decimal mode ", "only 1 decimal place permitted");
-            }
-            telemetry.addLine("a=1, b=2, x=3, y=4, up=5, down=6, left=7, right=8, RB=9, LB=0, back=decimal, Left Stick Button = negative, start = continue, Right Stick Button = erase");
-            telemetry.update();
-        }
-
-        telemetry.addData("Pos X ",X);
-        telemetry.addData("Pos Y ",Y);
-        telemetry.addLine("If incorrect, stop and reinit");
-        telemetry.update();
-        PoseStorage.grabColorPose = new Pose2d(X,-46+Y,Math.toRadians(90));
+//        cont = true;
+//        back = false;
+//        while (cont && !isStopRequested()){
+//            if (gamepad1.a && !a){
+//                if (decimal){
+//                    Y += 0.1;
+//                }
+//                else {
+//                    Y = 10 * Y + 1;
+//                }
+//            }
+//            a = gamepad1.a;
+//            if (gamepad1.b && !b){
+//                if (decimal){
+//                    Y += 0.2;
+//                }
+//                else {Y = 10*Y+2;}
+//            }
+//            b = gamepad1.b;
+//            if (gamepad1.x && !x){
+//                if (decimal){
+//                    Y += 0.3;
+//                }
+//                else {Y = 10*Y+3;}
+//            }
+//            x = gamepad1.x;
+//            if (gamepad1.y && !y){
+//                if (decimal){
+//                    Y += 0.4;
+//                }
+//                else {Y = 10*Y+4;}
+//            }
+//            y = gamepad1.y;
+//            if (gamepad1.dpad_up && !up){
+//                if (decimal){
+//                    Y += 0.5;
+//                }
+//                else {Y = 10*Y+5;}
+//            }
+//            up = gamepad1.dpad_up;
+//            if (gamepad1.dpad_down && !down){
+//                if (decimal){
+//                    Y += 0.6;
+//                }
+//                else {Y = 10*Y+6;}
+//            }
+//            down = gamepad1.dpad_down;
+//            if (gamepad1.dpad_left && !left){
+//                if (decimal){
+//                    Y += 0.7;
+//                }
+//                else {Y = 10*Y+7;}
+//            }
+//            left = gamepad1.dpad_left;
+//            if (gamepad1.dpad_right && !right){
+//                if (decimal){
+//                    Y += 0.8;
+//                }
+//                else {Y = 10*Y+8;}
+//            }
+//            right = gamepad1.dpad_right;
+//            if (gamepad1.right_bumper && !RB){
+//                if (decimal){
+//                    Y += 0.9;
+//                }
+//                else {Y = 10*Y+9;}
+//            }
+//            RB = gamepad1.right_bumper;
+//            if (gamepad1.left_bumper && !LB){
+//                if (decimal){
+//                    Y += 0.0;
+//                }
+//                else {Y = 10*Y+0;}
+//            }
+//            LB = gamepad1.left_bumper;
+//            if (gamepad1.back && !back){
+//                decimal = true;
+//            }
+//            back = gamepad1.back;
+//            if (gamepad1.left_stick_button && !LS){
+//                Y *= -1;
+//            }
+//            LS = gamepad1.left_stick_button;
+//            if (gamepad1.right_stick_button && !right_stick_button){
+//                Y = 0;
+//                decimal = false;
+//            }
+//            right_stick_button = gamepad1.right_stick_button;
+//            if (gamepad1.start && !start){
+//                cont = false;
+//            }
+//            start = gamepad1.start;
+//            telemetry.addData("Pos Y ",Y);
+//            if (decimal){
+//                telemetry.addData("In decimal mode ", "only 1 decimal place permitted");
+//            }
+//            telemetry.addLine("a=1, b=2, x=3, y=4, up=5, down=6, left=7, right=8, RB=9, LB=0, back=decimal, Left Stick Button = negative, start = continue, Right Stick Button = erase");
+//            telemetry.update();
+//        }
+//
+//        telemetry.addData("Pos X ",X);
+//        telemetry.addData("Pos Y ",Y);
+//        telemetry.addLine("If incorrect, stop and reinit");
+//        telemetry.update();
+        PoseStorage.grabColorPose = new Pose2d(10.5+X,-46+Y,Math.toRadians(90));
 
         TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose) //first specimen
                 .setTangent(Math.toRadians(90))
@@ -364,119 +365,119 @@ public class AUTON2025REDRIGHT_V4Robot_4 extends LinearOpMode {
                         )
                 )
         );
-        Action thirdTrajectory = drive.actionBuilder(new Pose2d(10.5, firstSpecDistance, Math.toRadians(90))) //push colored samples
-                .strafeTo(new Vector2d(10.5, firstSpecDistance-5))
-                .strafeTo(PoseStorage.grabColorPose.position)
-                .build();
-        Actions.runBlocking(
-                new SequentialAction(
-                    new ParallelAction(
-                                claw.openClawMore(),
-                                thirdTrajectory,
-                                arm1.liftVertFloor(0.2,1.1),
-                                arm2.liftVertFloor(0.2,1.1),
-                                intake_angle.RotatePosition2(1.3),
-                                claw.closeClaw(1.6)
-                        ),
-                        new ParallelAction(
-                                secondTrajectory,
-                                intake_angle.RotatePosition0_left(),
-                                arm1.liftWall_First(0.5,1.4),
-                                arm2.liftWall2_First(0.5,1.4),
-                                intake_angle.RotatePositionNegative2(0.5),
-                                claw.openClaw(1)
-                        ),
-                        claw.closeClaw(),
-                        //pick up and place second specimen
-                        new ParallelAction(
-                                arm1.liftRung_FirstSecond(0.2),
-                                arm2.liftRung2_First(0.2),
-                                sixthTrajectory,
-                                claw_angle.backward(0.2),
-                                intake_angle.RotatePosition4(0.4)
-                        ),
-                        //go to third specimen
-                        new ParallelAction(
-                                seventhTrajectory,
-                                claw.openClawMore(),
-                                intake_angle.RotatePositionNegative1(0),
-                                arm1.liftFloor(0.3,1.1), //0.5
-                                arm2.liftFloor(0.3,1.1, false),
-                                claw_angle.backward(0),
-                                intake_angle.RotatePosition0(0.5),
-                                claw.closeClaw(1.2)
-                        ),
-                        //pick up and place third specimen
-                        new ParallelAction(
-                                arm1.liftRung2(0,1.2),
-                                arm2.liftRung2(0,1.2),
-                                eighthTrajectory,
-                                claw_angle.forward(0)
-                        ),
-                        //go to fourth specimen
-                        new ParallelAction(
-                                ninthTrajectory,
-                                claw.openClawMore(),
-                                arm1.liftFloor(0.2,1.1),
-                                arm2.liftFloor(0.2,1.1,false),
-                                claw_angle.backward(0),
-                                claw.closeClaw(1.05)
-                        ),
-                        //pick up and place fourth specimen
-                        new ParallelAction(
-                                arm1.liftRung2(0,1.2), //0.3
-                                arm2.liftRung2(0,1.2),
-                                tenthTrajectory,
-                                claw_angle.forward(0)
-                        ),
-                        //go to fifth specimen
-                        new ParallelAction(
-                                eleventhTrajectory,
-                                claw.openClawMore(),
-                                arm1.liftFloor(0.2,1.1 ),
-                                arm2.liftFloor(0.2,1.1,false),
-                                claw_angle.backward(0),
-                                claw.closeClaw(1.05)
-                        ),
-                        //pick up and place fifth specimen
-                        new ParallelAction(
-                                arm1.liftRung2(0,1.2),
-                                arm2.liftRung2(0,1.2),
-                                twelfthTrajectory,
-                                claw_angle.forward(0)
-                        ),
-                        new ParallelAction(
-                                thirteenthTrajectory,
-                                claw.openClawMore(),
-                                arm1.liftFloor(0.2,1.1),
-                                arm2.liftFloor(0.2,1.1,false),
-                                claw_angle.backward(0),
-                                claw.closeClaw(1.05)
-                        ),
-                        new ParallelAction(
-                                arm1.liftRung2(0,1.2),
-                                arm2.liftRung2(0,1.2),
-                                fifteenthTrajectory,
-                                claw_angle.forward(0)
-                        ),
-                        new ParallelAction(
-                                sixteenthTrajectory,
-                                claw.openClawMore(),
-                                arm1.liftFloor(0.2,1.1),
-                                arm2.liftFloor(0.2,1.1,false),
-                                claw_angle.backward(0),
-                                claw.closeClaw(1.05)
-                        ),
-                        new ParallelAction(
-                                arm1.liftHighBasket(),
-                                arm2.liftHighBasket(),
-                                intake_angle.RotatePosition0_basket(1),
-                                fourteenthTrajectory
-                        ),
-                        claw.openClaw(),
-                        arm1.liftHighBasket(100)
-                )
-        );
+//        Action thirdTrajectory = drive.actionBuilder(new Pose2d(10.5, firstSpecDistance, Math.toRadians(90))) //push colored samples
+//                .strafeTo(new Vector2d(10.5, firstSpecDistance-5))
+//                .strafeTo(PoseStorage.grabColorPose.position)
+//                .build();
+//        Actions.runBlocking(
+//                new SequentialAction(
+//                    new ParallelAction(
+//                                claw.openClawMore(),
+//                                thirdTrajectory,
+//                                arm1.liftVertFloor(0.2,1.1),
+//                                arm2.liftVertFloor(0.2,1.1),
+//                                intake_angle.RotatePosition2(1.3),
+//                                claw.closeClaw(1.6)
+//                        ),
+//                        new ParallelAction(
+//                                secondTrajectory,
+//                                intake_angle.RotatePosition0_left(),
+//                                arm1.liftWall_First(0.5,1.4),
+//                                arm2.liftWall2_First(0.5,1.4),
+//                                intake_angle.RotatePositionNegative2(0.5),
+//                                claw.openClaw(1)
+//                        ),
+//                        claw.closeClaw(),
+//                        //pick up and place second specimen
+//                        new ParallelAction(
+//                                arm1.liftRung_FirstSecond(0.2),
+//                                arm2.liftRung2_First(0.2),
+//                                sixthTrajectory,
+//                                claw_angle.backward(0.2),
+//                                intake_angle.RotatePosition4(0.4)
+//                        ),
+//                        //go to third specimen
+//                        new ParallelAction(
+//                                seventhTrajectory,
+//                                claw.openClawMore(),
+//                                intake_angle.RotatePositionNegative1(0),
+//                                arm1.liftFloor(0.3,1.1), //0.5
+//                                arm2.liftFloor(0.3,1.1, false),
+//                                claw_angle.backward(0),
+//                                intake_angle.RotatePosition0(0.5),
+//                                claw.closeClaw(1.2)
+//                        ),
+//                        //pick up and place third specimen
+//                        new ParallelAction(
+//                                arm1.liftRung2(0,1.2),
+//                                arm2.liftRung2(0,1.2),
+//                                eighthTrajectory,
+//                                claw_angle.forward(0)
+//                        ),
+//                        //go to fourth specimen
+//                        new ParallelAction(
+//                                ninthTrajectory,
+//                                claw.openClawMore(),
+//                                arm1.liftFloor(0.2,1.1),
+//                                arm2.liftFloor(0.2,1.1,false),
+//                                claw_angle.backward(0),
+//                                claw.closeClaw(1.05)
+//                        ),
+//                        //pick up and place fourth specimen
+//                        new ParallelAction(
+//                                arm1.liftRung2(0,1.2), //0.3
+//                                arm2.liftRung2(0,1.2),
+//                                tenthTrajectory,
+//                                claw_angle.forward(0)
+//                        ),
+//                        //go to fifth specimen
+//                        new ParallelAction(
+//                                eleventhTrajectory,
+//                                claw.openClawMore(),
+//                                arm1.liftFloor(0.2,1.1 ),
+//                                arm2.liftFloor(0.2,1.1,false),
+//                                claw_angle.backward(0),
+//                                claw.closeClaw(1.05)
+//                        ),
+//                        //pick up and place fifth specimen
+//                        new ParallelAction(
+//                                arm1.liftRung2(0,1.2),
+//                                arm2.liftRung2(0,1.2),
+//                                twelfthTrajectory,
+//                                claw_angle.forward(0)
+//                        ),
+//                        new ParallelAction(
+//                                thirteenthTrajectory,
+//                                claw.openClawMore(),
+//                                arm1.liftFloor(0.2,1.1),
+//                                arm2.liftFloor(0.2,1.1,false),
+//                                claw_angle.backward(0),
+//                                claw.closeClaw(1.05)
+//                        ),
+//                        new ParallelAction(
+//                                arm1.liftRung2(0,1.2),
+//                                arm2.liftRung2(0,1.2),
+//                                fifteenthTrajectory,
+//                                claw_angle.forward(0)
+//                        ),
+//                        new ParallelAction(
+//                                sixteenthTrajectory,
+//                                claw.openClawMore(),
+//                                arm1.liftFloor(0.2,1.1),
+//                                arm2.liftFloor(0.2,1.1,false),
+//                                claw_angle.backward(0),
+//                                claw.closeClaw(1.05)
+//                        ),
+//                        new ParallelAction(
+//                                arm1.liftHighBasket(),
+//                                arm2.liftHighBasket(),
+//                                intake_angle.RotatePosition0_basket(1),
+//                                fourteenthTrajectory
+//                        ),
+//                        claw.openClaw(),
+//                        arm1.liftHighBasket(100)
+//                )
+//        );
         Pose2d pose = drive.localizer.getPose();
         PoseStorage.currentPose =
         new Pose2d(
