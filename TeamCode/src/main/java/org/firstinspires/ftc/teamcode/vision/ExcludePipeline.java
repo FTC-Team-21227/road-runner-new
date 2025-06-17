@@ -47,7 +47,7 @@ public class ExcludePipeline extends OpenCvPipeline {
     List<MatOfPoint> contours = new ArrayList<>();
 
     public static boolean printStuff= true;
-    public static double RUH = 10, RLH = 160, RS = 90, RV = 70, BH = 100, BUH = 120, BS = 70, BV = 80, YH = 15 /*10*/ /*20*/ /*15*/ /*27*/, YUH = 40 /*30*/ /*40*/ /*30*/ /*33*/, YS = 80 /*150*/ /*85*/ /*80*/ /*100*/ /*80*/ /*100*/, YV = 210 /*243*/ /*250*/ /*150*/ /*100*/ /*150*/ /*51*/, AREA_RATIO_WEIGHT = -0.4, UPPIES = .5, MIN_AREA = 2500 /*7000*/,FOR_MULT=0.85,
+    public static double RUH = 10, RLH = 150, RS = 90, RV = 170, BH = 100, BUH = 120, BS = 70, BV = 80, YH = 15 /*10*/ /*20*/ /*15*/ /*27*/, YUH = 40 /*30*/ /*40*/ /*30*/ /*33*/, YS = 80 /*150*/ /*85*/ /*80*/ /*100*/ /*80*/ /*100*/, YV = 210 /*243*/ /*250*/ /*150*/ /*100*/ /*150*/ /*51*/, AREA_RATIO_WEIGHT = -0.4, UPPIES = .5, MIN_AREA = 2500 /*7000*/,FOR_MULT=0.85,
             FOR_CONST = 3.6;
     public static int UPPER_THRESH = 280 /*120*/, LOWER_THRESH = 20 /*60*/, YUPPER_THRESH = 240, YLOWER_THRESH = 80, KERNEL_SIZE = 2, YELLOW_KERNEL_SIZE = 2;
     public static double horizontal_offset = 6.55, camera_tilt = Math.toRadians(36), forward_offset = 20;
