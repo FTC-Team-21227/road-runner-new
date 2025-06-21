@@ -12,6 +12,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.MecanumDrive;
+import org.firstinspires.ftc.teamcode.MecanumDrive_Left;
 
 @Autonomous(name = "LEFT_0+6")
 //5 sample auto
@@ -19,7 +20,7 @@ public class AUTON2025REDLEFT_V4Robot extends LinearOpMode{
     @Override
     public void runOpMode() throws InterruptedException {
         Pose2d initialPose = new Pose2d(0, 92, Math.toRadians(0));
-        MecanumDrive drive = new MecanumDrive(hardwareMap, initialPose);
+        MecanumDrive_Left drive = new MecanumDrive_Left(hardwareMap, initialPose);
         ARM1_V2Robot arm1 = new ARM1_V2Robot(hardwareMap);
         ARM2_V2Robot arm2 = new ARM2_V2Robot(hardwareMap);
         CLAW_NEW claw = new CLAW_NEW(hardwareMap);
@@ -248,7 +249,7 @@ public class AUTON2025REDLEFT_V4Robot extends LinearOpMode{
         telemetry.update();
 
         TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose)
-                .strafeTo(new Vector2d(10, 92))
+//                .strafeTo(new Vector2d(10, 92))
 //                .waitSeconds(1)
 //                .setTangent(0)
                 .strafeToLinearHeading(new Vector2d(8, 112.5), Math.toRadians(-45));// loaded sample go to basket
@@ -405,10 +406,10 @@ public class AUTON2025REDLEFT_V4Robot extends LinearOpMode{
                     ninthTrajectory,
                     claw_angle.forward(0.5),
                     claw.openClaw(0.5),
-                    intake_angle.RotatePosition2(2),
-                    arm1.waitLiftVertSub(0.3),
+                    arm1.waitLiftVertFloor(0.3),
                     arm2.waitLiftVertSub(0.3),
-                    arm1.waitLiftVertFloor(4,0.7, 0.2)
+//                    arm1.waitLiftVertFloor(4,0.7, 0.2)
+                    intake_angle.RotatePosition2(2)
 //                    arm2.waitLiftVertFloor(4,0.7)
                 ),
 //                new ParallelAction(
@@ -428,10 +429,10 @@ public class AUTON2025REDLEFT_V4Robot extends LinearOpMode{
                             eleventhTrajectory,
                             claw_angle.forward(0.5),
                             claw.openClaw(0.5),
-                            intake_angle.RotatePosition2(2),
-                            arm1.waitLiftVertSub(0.3),
+                            arm1.waitLiftVertFloor(0.3),
                             arm2.waitLiftVertSub(0.3),
-                            arm1.waitLiftVertFloor(4,0.7, 0.2)
+//                            arm1.waitLiftVertFloor(4,0.7, 0.2)
+                            intake_angle.RotatePosition2(4)
 //                    arm2.waitLiftVertFloor(4,0.7)
                     ),
 //                new ParallelAction(

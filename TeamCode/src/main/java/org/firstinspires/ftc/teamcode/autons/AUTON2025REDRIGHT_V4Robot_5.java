@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.autons;
 
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
@@ -16,8 +15,8 @@ import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 
-@Autonomous(name = "REDRIGHT_6+1_CV")
-public class AUTON2025REDRIGHT_V4Robot_4 extends LinearOpMode {
+@Autonomous(name = "REDRIGHT_6+0_CV")
+public class AUTON2025REDRIGHT_V4Robot_5 extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         Pose2d initialPose = new Pose2d(10.5, -63.3, Math.toRadians(90));
@@ -155,7 +154,7 @@ public class AUTON2025REDRIGHT_V4Robot_4 extends LinearOpMode {
             telemetry.addLine("a=1, b=2, x=3, y=4, up=5, down=6, left=7, right=8, RB=9, LB=0, back=decimal, Left Stick Button = negative,  start = continue, Right Stick Button = erase");
             telemetry.update();
         }
-        double pose_Y = 2;
+        double pose_Y = 3;
         double Y = 0;
         cont = true;
         back = false;
@@ -273,12 +272,12 @@ public class AUTON2025REDRIGHT_V4Robot_4 extends LinearOpMode {
 
         MecanumDrive.PARAMS.axialGain = 2.0;
         MecanumDrive.PARAMS.lateralGain = 1.0;
-        TrajectoryActionBuilder tab6 = drive.actionBuilder(new Pose2d(70, -60.5, Math.toRadians(90))) //pick up and place second specimen
+        TrajectoryActionBuilder tab6 = drive.actionBuilder(new Pose2d(68, -60.5, Math.toRadians(90))) //pick up and place second specimen
                 .setTangent(Math.toRadians(180))
                 .waitSeconds(0.3)
                 .splineToConstantHeading(new Vector2d(10, -61.5),Math.toRadians(180))
-                .splineToConstantHeading(new Vector2d(-6.5,firstSpecDistance+2),Math.toRadians(90));
-        TrajectoryActionBuilder tab7 = drive.actionBuilder(new Pose2d(-6.5, firstSpecDistance+2, Math.toRadians(90))) //go to third specimen
+                .splineToConstantHeading(new Vector2d(-5.5,firstSpecDistance+2),Math.toRadians(90));
+        TrajectoryActionBuilder tab7 = drive.actionBuilder(new Pose2d(-5.5, firstSpecDistance+2, Math.toRadians(90))) //go to third specimen
 //                .setTangent(Math.toRadians(-90))
 //                .splineToConstantHeading(new Vector2d(9, firstSpecDistance-3),Math.toRadians(-90))
 //                .splineToLinearHeading(new Pose2d(wallGrab1,wallGrab,Math.toRadians(wallGrabAngle)),Math.toRadians(-45))
@@ -310,9 +309,7 @@ public class AUTON2025REDRIGHT_V4Robot_4 extends LinearOpMode {
                 .splineToLinearHeading(new Pose2d(6,otherSpecDistance,Math.toRadians(-90)),Math.toRadians(90));
         TrajectoryActionBuilder tab16 = drive.actionBuilder(new Pose2d(6, otherSpecDistance, Math.toRadians(-90))) //park
                 .setTangent(Math.toRadians(-90))
-                .splineToLinearHeading(new Pose2d(wallGrab1,wallGrab,Math.toRadians(wallGrabAngle)),Math.toRadians(-45));
-        TrajectoryActionBuilder tab14 = drive.actionBuilder(new Pose2d(wallGrab1,wallGrab,Math.toRadians(wallGrabAngle))) //park
-                .strafeToLinearHeading(new Vector2d(-49,-55),Math.toRadians(45),new TranslationalVelConstraint(120), new ProfileAccelConstraint(-40,100));
+                .splineToLinearHeading(new Pose2d(wallGrab1+8,wallGrab-2,Math.toRadians(wallGrabAngle+20)),Math.toRadians(-45));
 
         Actions.runBlocking(
                 new SequentialAction(
@@ -333,7 +330,6 @@ public class AUTON2025REDRIGHT_V4Robot_4 extends LinearOpMode {
         Action thirteenthTrajectory = tab13.build();
         Action fifteenthTrajectory = tab15.build();
         Action sixteenthTrajectory = tab16.build();
-        Action fourteenthTrajectory = tab14.build();
 
         waitForStart();
 
@@ -353,6 +349,7 @@ public class AUTON2025REDRIGHT_V4Robot_4 extends LinearOpMode {
         );
         Pose2d color_pose = PoseStorage.grabColorPose;
         RobotLog.dd("COLOR_POSE", color_pose.position.x + ", " + color_pose.position.y + ", " + color_pose.heading.toDouble());
+        MecanumDrive.PARAMS.axialGain = 8.0;
         MecanumDrive.PARAMS.lateralGain = 8.0;
         Action thirdTrajectory = drive.actionBuilder(new Pose2d(pose_X, firstSpecDistance, Math.toRadians(90))) //push colored samples
                 .strafeTo(new Vector2d(pose_X, firstSpecDistance-5))
@@ -361,12 +358,12 @@ public class AUTON2025REDRIGHT_V4Robot_4 extends LinearOpMode {
         Action secondTrajectory = drive.actionBuilder(color_pose) //push colored samples
                 .setTangent(Math.toRadians(-90))
                 .waitSeconds(0.3)
-                .splineToConstantHeading(new Vector2d(19,-58),Math.toRadians(-45))
-                .splineToConstantHeading(new Vector2d(27,-60),Math.toRadians(0))
-                .splineToConstantHeading(new Vector2d(35+frictionConstant, -58),Math.toRadians(45))
-                .splineToConstantHeading(new Vector2d(45,-42),Math.toRadians(90))
-                .splineToConstantHeading(new Vector2d(37,-22),Math.toRadians(90))
-                .splineToConstantHeading(new Vector2d(45+frictionConstant, -8),Math.toRadians(0))
+                .splineToConstantHeading(new Vector2d(15,-54),Math.toRadians(-45))
+                .splineToConstantHeading(new Vector2d(27,-56),Math.toRadians(0))
+                .splineToConstantHeading(new Vector2d(39+frictionConstant, -54),Math.toRadians(45))
+                .splineToConstantHeading(new Vector2d(35,-42),Math.toRadians(90))
+                .splineToConstantHeading(new Vector2d(37,-16),Math.toRadians(90))
+                .splineToConstantHeading(new Vector2d(45+frictionConstant, 0),Math.toRadians(0))
 //                .strafeTo(new Vector2d(50, -48))
                 .splineToConstantHeading(new Vector2d(52+frictionConstant,-22),Math.toRadians(-90))
                 .splineToConstantHeading(new Vector2d(52,-46),Math.toRadians(-90))
@@ -377,10 +374,10 @@ public class AUTON2025REDRIGHT_V4Robot_4 extends LinearOpMode {
                 .splineToConstantHeading(new Vector2d(60.5, -46),Math.toRadians(-90))
                 .setTangent(Math.toRadians(90))
                 .splineToConstantHeading(new Vector2d(60.5, -22),Math.toRadians(90))
-                .splineToConstantHeading(new Vector2d(67+frictionConstant, -16),Math.toRadians(0))
-                .splineToConstantHeading(new Vector2d(70+frictionConstant, -22),Math.toRadians(-90))
-                .splineToConstantHeading(new Vector2d(70, -45.5),Math.toRadians(-90))
-                .splineToConstantHeading(new Vector2d(70, -60.5),Math.toRadians(-90), new TranslationalVelConstraint(15))
+                .splineToConstantHeading(new Vector2d(65+frictionConstant, -16),Math.toRadians(0))
+                .splineToConstantHeading(new Vector2d(68+frictionConstant, -22),Math.toRadians(-90))
+                .splineToConstantHeading(new Vector2d(68, -45.5),Math.toRadians(-90))
+                .splineToConstantHeading(new Vector2d(68, -60.5),Math.toRadians(-90), new TranslationalVelConstraint(15))
                 .build();
         Actions.runBlocking(
                 new SequentialAction(
@@ -392,19 +389,23 @@ public class AUTON2025REDRIGHT_V4Robot_4 extends LinearOpMode {
                                 arm2.liftVertFloor(0.2,1.1),
                                 intake_angle.RotatePosition2(1.5),
                                 claw.closeClaw(2)
-                        ),
+                        )
+                )
+        );
+        MecanumDrive.PARAMS.axialGain = 2.0;
+        Actions.runBlocking(
+                new SequentialAction(
                         new ParallelAction(
                                 secondTrajectory,
                                 intake_angle.RotatePosition0_left(0.3),
                                 arm1.liftWall_First(0.8,1.4),
                                 arm2.liftWall2_First(0.8,1.4),
                                 intake_angle.RotatePositionNegative2(1.0),
-                                claw.openClaw(1.3)
+                                claw.openClaw(1.4)
                         ),
                         claw.closeClaw()
                 )
         );
-        MecanumDrive.PARAMS.axialGain = 2.0;
         MecanumDrive.PARAMS.lateralGain = 1.0;
         Actions.runBlocking(
                 new SequentialAction(
@@ -439,7 +440,7 @@ public class AUTON2025REDRIGHT_V4Robot_4 extends LinearOpMode {
                                 ninthTrajectory,
                                 claw.openClawMore(),
                                 arm1.liftFloor(0.2,1.1),
-                                arm2.liftFloor(0.2,1.1,false),
+                                arm2.liftFloor(0.2,1.1),
                                 claw_angle.backward(0),
                                 claw.closeClaw(1.05)
                         ),
@@ -455,7 +456,7 @@ public class AUTON2025REDRIGHT_V4Robot_4 extends LinearOpMode {
                                 eleventhTrajectory,
                                 claw.openClawMore(),
                                 arm1.liftFloor(0.2,1.1 ),
-                                arm2.liftFloor(0.2,1.1,false),
+                                arm2.liftFloor(0.2,1.1),
                                 claw_angle.backward(0),
                                 claw.closeClaw(1.05)
                         ),
@@ -470,7 +471,7 @@ public class AUTON2025REDRIGHT_V4Robot_4 extends LinearOpMode {
                                 thirteenthTrajectory,
                                 claw.openClawMore(),
                                 arm1.liftFloor(0.2,1.1),
-                                arm2.liftFloor(0.2,1.1,false),
+                                arm2.liftFloor(0.2,1.1),
                                 claw_angle.backward(0),
                                 claw.closeClaw(1.05)
                         ),
@@ -483,19 +484,9 @@ public class AUTON2025REDRIGHT_V4Robot_4 extends LinearOpMode {
                         new ParallelAction(
                                 sixteenthTrajectory,
                                 claw.openClawMore(),
-                                arm1.liftFloor(0.2,1.1),
-                                arm2.liftFloor(0.2,1.1,false),
-                                claw_angle.backward(0),
-                                claw.closeClaw(1.05)
-                        ),
-                        new ParallelAction(
-                                arm1.liftHighBasket(),
-                                arm2.liftHighBasket(),
-                                intake_angle.RotatePosition0_basket(1),
-                                fourteenthTrajectory
-                        ),
-                        claw.openClaw(),
-                        arm1.liftHighBasket(100)
+                                arm1.liftSub(0.2,1.1),
+                                arm2.liftSub(0.2,1.1)
+                        )
                 )
         );
         Pose2d pose = drive.localizer.getPose();

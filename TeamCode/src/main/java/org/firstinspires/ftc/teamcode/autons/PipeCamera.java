@@ -41,6 +41,7 @@ public class PipeCamera {
     final BuiltinCameraDirection INTERNAL_CAM_DIR = BuiltinCameraDirection.BACK;
     final int RESOLUTION_WIDTH = 640;
     final int RESOLUTION_HEIGHT = 480;
+    boolean chamberPos;
 
     OpenCvWebcam camera;
     ExcludePipeline exclude;
@@ -50,7 +51,8 @@ public class PipeCamera {
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
 
         camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam1"), cameraMonitorViewId);
-        exclude = new ExcludePipeline(telemetry);
+        this.chamberPos = chamberPos;
+        exclude = new ExcludePipeline(telemetry,chamberPos);
         if (inclYellow && color.equals("yellow")) {
             swapInt(3);
         }
@@ -105,21 +107,25 @@ public class PipeCamera {
         return .001*camera.getTotalFrameTimeMs();
     }
     public void swapRed(){
-
         exclude.setColor(0);
     }
     public void swapBlue(){
         exclude.setColor(1);
     }
     public void swapYellow(){
-        exclude.setColor(2);
+        exclude.setColor(3);
     }
     public void resetCenter(){
         exclude.resetCenter();
     }
-    public void swapTeleRed() {exclude.isBlue = false;
-        exclude.setColor(0);}
-    public void swapTeleBlue() {exclude.isBlue = true; exclude.setColor(1);}
+    public void swapTeleRed() {
+        ExcludePipeline.isBlue = false;
+        exclude.setColor(2);
+    }
+    public void swapTeleBlue() {
+        ExcludePipeline.isBlue = true;
+        exclude.setColor(2);
+    }
 
     public class computeTargetPose implements Action {
         ElapsedTime time = new ElapsedTime();
@@ -146,65 +152,45 @@ public class PipeCamera {
                 if (!Arrays.equals(relCent, new double[]{0, 0, 0, 0})) {
                     resetCenter();
 //                    relCent[0] = (relCent[2] * Math.sin(arm.getRot() * PI / 180) + relCent[0] * Math.cos(arm.getRot() * PI / 180) - FOR_CONST) * FOR_MULT;
-                    packet.put("relCent0", relCent[0]);
-                    packet.put("relCent1", relCent[1]);
-//                    packet.put("rotVel", follower.getVelocityPose().getHeading());
-//                    if (relCent[0] * relCent[0] + relCent[1] * relCent[1] < 200) {
-//                        if (time - lastMoveTime > MOVE_INTERVAL) {
-//                            Vector2d relVect = new Vector2d(0, ((-relCent[1] + Math.signum(-relCent[1]) * SIDE_CONST)) * SIDE_MULT
-//                                    - 1.2 * follower.getStableRotVelo().getY() * cv.getLatency()).rotated(follower.getPose().getHeading());
-//                            Vector2d relVect2 = new Vector2d(0, (-relCent[1] * SIDE_MULT))
-//                                    .rotated(follower.getPose().getHeading());
-//                            Pose pos = follower.getPose();
-//                            pos.add(new Pose(relVect.getX(), relVect.getY(), 0));
-//                            Pose pos2 = follower.getPose();
-//                            pos2.add(new Pose(relVect2.getX(), relVect2.getY(), 0));
-//                            double newExt = Math.max(arm.getExt() + relCent[0] - (-arm.getVel() + follower.getStableRotVelo().getX()) * cv.getLatency() , MIN_EXT);
+//                    packet.put("relCent0", relCent[0]+"");
+//                    packet.put("relCent1", relCent[1]+"");
+//                    packet.put("angle", relCent[3]+"");
+                    RobotLog.dd("relCent0", relCent[0]+"");
+                    RobotLog.dd("relCent1", relCent[1]+"");
+                    RobotLog.dd("angle", relCent[3]+"");
 //
-//                            if (newExt > arm.getExt() + 8 || newExt > MAX_EXT) {
-//                                targeted = false;
-//                            } else {
-////                                    if (newExt > MIN_EXT + .1) {
-//                                flip.flipTo(Flip.FlipStates.SUBMERSIBLE);
-////                                    }
-//                                double head = follower.getPose().getHeading()/* - 0.5*follower.getStableRotVelo().getHeading()*cv.getLatency()*/;
-////                                    if (follower.getCurrentPath() != null) {
-////                                        head = follower.getCurrentPath().getHeadingGoal(1);
-////                                    }
-//                                Point curTarg = lastTarg;
-//                                Point newTarg = new Point(pos2);
-//                                if (curTarg == null) {
-//                                    follower.holdPoint(new BezierPoint(new Point(pos)), head);
-//                                } else if (curTarg.distanceFrom(newTarg) > 0.05) {
-//                                    follower.holdPoint(new BezierPoint(new Point(pos)), head);
-//                                }
-////                                    if(newExt>arm.getTargetExt()+.25){
-////                                        newExt+=.5;
-////                                    }
-//                                if (newExt < arm.getTargetExt() - .25) {
-//                                    newExt -= RETRACT_CONST;
-//                                }
-//                                arm.goToResetManual(newExt, Math.atan2(3, newExt + 12) * 180 / PI);
-//                                twist.twistToAng(relCent[3]);
-//                                packet.put("newExt", newExt);
-//                                packet.put("relVect", relVect);
-//                                packet.put("relAng", relCent[3]);
-//                                packet.put("latency", cv.getLatency());
-//                                lastTarg = new Point(pos2);
-//                                lastMoveTime = time;
-//                            }
-//                        }
-//                    }
-                    double x = PoseStorage.grabColorPose.position.x;
-                    double y = PoseStorage.grabColorPose.position.y;
-                    PoseStorage.grabColorPose = new Pose2d(x+relCent[0],y+relCent[1],Math.toRadians(90));
+                    if (chamberPos) {
+                        double x = PoseStorage.grabColorPose.position.x;
+                        double y = -45; //PoseStorage.grabColorPose.position.y;
+                        PoseStorage.grabColorPose = new Pose2d(x + relCent[0], y + relCent[1], Math.toRadians(90));
+                    }
+                    else{
+                        double x = PoseStorage.grabYellowPose.position.x;
+                        double y = 94; //PoseStorage.grabYellowPose.position.y;
+                        PoseStorage.grabYellowPose = new Pose2d(x + relCent[0], y + relCent[1], Math.toRadians(-90));
+                    }
                 }
                 else{
-                    packet.addLine("no relCent detected");
+//                    packet.addLine("no relCent detected");
+                    RobotLog.d("no relCent detected");
+                }
+                if (chamberPos) {
+//                    packet.put("Pose Storage x", PoseStorage.grabColorPose.position.x+"");
+//                    packet.put("Pose Storage y", PoseStorage.grabColorPose.position.y+"");
+                    RobotLog.dd("Pose Storage x", PoseStorage.grabColorPose.position.x+"");
+                    RobotLog.dd("Pose Storage y", PoseStorage.grabColorPose.position.y+"");
+                }
+                else{
+//                    packet.put("Pose Storage x", PoseStorage.grabYellowPose.position.x+"");
+//                    packet.put("Pose Storage y", PoseStorage.grabYellowPose.position.y+"");
+                    RobotLog.dd("Pose Storage x", PoseStorage.grabYellowPose.position.x+"");
+                    RobotLog.dd("Pose Storage y", PoseStorage.grabYellowPose.position.y+"");
                 }
                 resetCenter();
+//                camera.stopStreaming();
+//                camera.closeCameraDevice();
 //                RobotLog.dd("SUB GRAB POSE", PoseStorage.grabColorPose.position.x+","+PoseStorage.grabColorPose.position.y+","+PoseStorage.grabColorPose.heading.toDouble());
-                return true;
+                return false;
             }
         }
     }

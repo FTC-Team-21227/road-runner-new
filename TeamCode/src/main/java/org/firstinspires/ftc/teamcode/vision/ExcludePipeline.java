@@ -45,24 +45,12 @@ public class ExcludePipeline extends OpenCvPipeline {
     public static int retVal = 0;
     public static boolean isBlue = true;
     List<MatOfPoint> contours = new ArrayList<>();
+    boolean chamberPos;
 
     public static boolean printStuff= true;
-    public static double RUH = 10, RLH = 150, RS = 90, RV = 170, BH = 100, BUH = 120, BS = 70, BV = 80, YH = 15 /*10*/ /*20*/ /*15*/ /*27*/, YUH = 40 /*30*/ /*40*/ /*30*/ /*33*/, YS = 80 /*150*/ /*85*/ /*80*/ /*100*/ /*80*/ /*100*/, YV = 210 /*243*/ /*250*/ /*150*/ /*100*/ /*150*/ /*51*/, AREA_RATIO_WEIGHT = -0.4, UPPIES = .5, MIN_AREA = 2500 /*7000*/,FOR_MULT=0.85,
-            FOR_CONST = 3.6;
+    public static double RUH = 10, RLH = 150, RS = 90, RV = 210, BH = 100, BUH = 120, BS = 70, BV = 220 /*80*/, YH = 15 /*10*/ /*20*/ /*15*/ /*27*/, YUH = 40 /*30*/ /*40*/ /*30*/ /*33*/, YS = 80 /*150*/ /*85*/ /*80*/ /*100*/ /*80*/ /*100*/, YV = 210 /*243*/ /*250*/ /*150*/ /*100*/ /*150*/ /*51*/, AREA_RATIO_WEIGHT = -0.4, UPPIES = .5, MIN_AREA = 2500 /*7000*/;
     public static int UPPER_THRESH = 280 /*120*/, LOWER_THRESH = 20 /*60*/, YUPPER_THRESH = 240, YLOWER_THRESH = 80, KERNEL_SIZE = 2, YELLOW_KERNEL_SIZE = 2;
-    public static double horizontal_offset = 6.55, camera_tilt = Math.toRadians(36), forward_offset = 20;
-    private final double ticks_in_degree_1 = TunePID_MotionProfile.ticks_in_degree_1;
-    private final double ticks_in_degree_2 = TunePID_MotionProfile.ticks_in_degree_2;
-    private final double L1 = TunePID_MotionProfile.L1;
-    private final double L2 = TunePID_MotionProfile.L2;
-    private final double x1 = TunePID_MotionProfile.x1;
-    private final double x2 = TunePID_MotionProfile.x2;
-    private final double m1 = TunePID_MotionProfile.m1;
-    private final double m2 = TunePID_MotionProfile.m2;
-    private final double vertFloor1 = Subsystem_Constants.vertFloor1;
-    private final double vertFloor2 = Subsystem_Constants.vertFloor2;
-    double ARM1_OFFSET = TunePID_MotionProfile.ARM1_OFFSET;
-    double ARM2_OFFSET = TunePID_MotionProfile.ARM2_OFFSET;
+    public static double horizontal_offset, camera_tilt, forward_offset, inchPerPixel_x, inchPerPixel_y,k,MIN_DIST = 36;
     Mat hsv = new Mat();
     Mat mask = new Mat(), mask2 = new Mat(), closedEdges = new Mat(), edges = new Mat();
     Mat kernel = new Mat();
@@ -76,35 +64,15 @@ public class ExcludePipeline extends OpenCvPipeline {
     double objectWidth = 3.5;
     double objectHeight = 1.5;
 
-    MatOfPoint3f objectPoints = new MatOfPoint3f(
-            new Point3(objectWidth / 2, objectHeight / 2, 0),
-            new Point3(-objectWidth / 2, objectHeight / 2, 0),
-            new Point3(-objectWidth / 2, -objectHeight / 2, 0),
-            new Point3(objectWidth / 2, -objectHeight / 2, 0));
-    MatOfPoint3f objectPoints1 = new MatOfPoint3f(
-            new Point3(objectWidth / 2, objectHeight / 2, -1),
-            new Point3(-objectWidth / 2, objectHeight / 2, -1),
-            new Point3(-objectWidth / 2, -objectHeight / 2, 0),
-            new Point3(objectWidth / 2, -objectHeight / 2, 0));
-    MatOfPoint3f objectPoints2 = new MatOfPoint3f(
-            new Point3(objectWidth / 2, -objectHeight / 2, -1),
-            new Point3(-objectWidth / 2, -objectHeight / 2, 0),
-            new Point3(-objectWidth / 2, objectHeight / 2, 0),
-            new Point3(objectWidth / 2, objectHeight / 2, -1)
-    );
-
-    MatOfPoint3f rlObjectPoints;
-
-    Point[] orderedRectPoints;
-    Mat rvec = new Mat();
-    Mat tvec = new Mat();
-    MatOfPoint2f imagePoints = new MatOfPoint2f(), contour2f = new MatOfPoint2f();
+    MatOfPoint2f contour2f = new MatOfPoint2f();
     private volatile double[] center = {0, 0, 0, 0};
     Double[] camCent = {0.0 , 0.0, 0.0, 0.0};
 
     double objX_cam = 0;
     double objY_cam = 0;
     double objZ_cam = 0;
+    double objX_base = 0;
+    double objY_base = 0;
     int color = 0;
 
     /*
@@ -116,17 +84,21 @@ public class ExcludePipeline extends OpenCvPipeline {
     Telemetry telemetry;
 
 
-    public ExcludePipeline(Telemetry telemetry) {
-        double fx = 1647 * FCL; // Replace with your camera's focal length in pixels
-        double fy = 1647 * FCL;
-        double cx = 746; // Replace with your camera's principal point x-coordinate (usually image width / 2)
-        double cy = 439; // Replace with your camera's principal point y-coordinate (usually image height / 2)
-        cameraMatrix.put(0, 0,
-                fx, 0, cx,
-                0, fy, cy,
-                0, 0, 1);
-        distCoeffs = new MatOfDouble(0.08642896,  0.58342025,  0.00830023,  0.00885814, -3.45247042);
+    public ExcludePipeline(Telemetry telemetry, boolean chamberPos) {
+        if (chamberPos) {horizontal_offset = -10 /*5*/ /*-11.5*/; camera_tilt = Math.toRadians(36); forward_offset = 0; inchPerPixel_x = 17.0/640; inchPerPixel_y = 18.0/480; k = Math.log(14.0/2)/Math.log(14.17/3.68);} //30; //45; //50 /*30*/;}
+        else {horizontal_offset = -8 /*5*/ /*-9.5*/; camera_tilt = Math.toRadians(0); forward_offset = -3; inchPerPixel_x = 10.5/640; inchPerPixel_y = 7.0/480; k=1;
+        } //30; //45; //50 /*30*/;}
+//        double fx = 1647 * FCL; // Replace with your camera's focal length in pixels
+//        double fy = 1647 * FCL;
+//        double cx = 746; // Replace with your camera's principal point x-coordinate (usually image width / 2)
+//        double cy = 439; // Replace with your camera's principal point y-coordinate (usually image height / 2)
+//        cameraMatrix.put(0, 0,
+//                fx, 0, cx,
+//                0, fy, cy,
+//                0, 0, 1);
+//        distCoeffs = new MatOfDouble(0.08642896,  0.58342025,  0.00830023,  0.00885814, -3.45247042);
         this.telemetry = telemetry;
+        this.chamberPos = chamberPos;
     }
 
 
@@ -208,27 +180,6 @@ public class ExcludePipeline extends OpenCvPipeline {
             telemetry.addLine("contours are empty!!");
         }
         telemetry.update();
-//        if(printStuff) {
-//            if (retVal == 0)
-//                boundingImage.copyTo(input);
-//            else if (retVal == 1)
-//                maskedImage.copyTo(input);
-//            else if (retVal == 2)
-//                return edges;
-//            else
-//                return closedEdges;
-//        }
-//        closedEdges.release();
-//        colorMask.release();
-//        edges.release();
-//        hsv.release();
-//        mask.release();
-//        mask2.release();
-//        maskedImage.release();
-//        hierarchy.release();
-//        hierarchy.release();
-//        boundingImage.release();
-//        return input;
         // Replace the final return section with:
         Mat result;
         if(printStuff) {
@@ -281,69 +232,15 @@ public class ExcludePipeline extends OpenCvPipeline {
         packet.put("CAM X", camCent[0]);
         packet.put("CAM Y", camCent[1]);
         packet.put("CAM Z", camCent[2]);
-
+        packet.put("angle", camCent[3]);
+        packet.put("objX_base", objX_base);
+        packet.put("objY_base", objY_base);
         return center;
     }
-
-//    public Double[] matchedCoords(ArrayList<Double[]> colorCoords, ArrayList<Double[]> allCoords) {
-//        ArrayList<Double[]> matchedCenters = new ArrayList<>();
-//        double minDist = 1000;
-//        int coord = 0;
-//
-//        // Get current arm angles from your teleop class
-//        double arm1Angle = Math.toRadians(vertFloor1/ticks_in_degree_1 + ARM1_OFFSET);
-//        double arm2Angle = Math.toRadians(vertFloor2/ticks_in_degree_2 + ARM2_OFFSET);
-//
-//        // Calculate end effector position using forward kinematics
-//        double endEffectorX = L1 * Math.cos(arm1Angle) + L2 * Math.cos(arm1Angle + arm2Angle);
-//        double endEffectorY = L1 * Math.sin(arm1Angle) + L2 * Math.sin(arm1Angle + arm2Angle);
-//
-//        for (int i = 0; i < colorCoords.size(); i++) {
-//            matchedCenters.add(colorCoords.get(i));
-//            double[] relCent = convertToDoubleArray(colorCoords.get(i));
-//
-//            // Transform camera coordinates to arm base coordinates
-//            // This depends on how your camera is mounted relative to the arm base
-//            double armBaseX = relCent[0] * FOR_MULT - FOR_CONST; // Adjust these constants
-//            double armBaseY = relCent[1] * FOR_MULT;
-//
-//            // Calculate distance from current end effector position
-//            double dx = armBaseX - endEffectorX;
-//            double dy = armBaseY - endEffectorY;
-//            double dist = dx*dx + dy*dy;
-//
-//            if (dist < minDist) {
-//                coord = matchedCenters.size() - 1;
-//                minDist = dist;
-//            }
-//        }
-//
-//        if (matchedCenters.isEmpty())
-//            return new Double[]{100.0, 100.0, 100.0, 100.0};
-//        return matchedCenters.get(coord);
-//    }
     public Double[] matchedCoords(ArrayList<Double[]> colorCoords, ArrayList<Double[]> allCoords) {
         ArrayList<Double[]> matchedCenters = new ArrayList<>();
-        double minDist = 1000;
+        double minDist = MIN_DIST;
         int coord = 0;
-
-        // Get current arm angles in radians
-        double arm1Angle = Math.toRadians((PoseStorage.target1) + ARM1_OFFSET);
-        double arm2Angle = Math.toRadians((PoseStorage.target2) + ARM2_OFFSET);
-        double totalAngle = arm1Angle + arm2Angle;
-
-        double arm1FloorAngle = Math.toRadians(vertFloor1) + ARM1_OFFSET;
-        double arm2FloorAngle = Math.toRadians(vertFloor2) + ARM2_OFFSET;
-        double totalFloorAngle = arm1FloorAngle + arm2FloorAngle;
-
-        // Camera position relative to ARM2 joint (measure these values)
-        double CAM_OFFSET_X = 10.75;  // Distance along the arm segment (inches)
-        double CAM_OFFSET_Z = -0.25;  // Height offset from arm plane (inches)
-
-        // Calculate camera position in arm base frame
-        double camX = L1 * Math.cos(arm1Angle) + CAM_OFFSET_X * Math.cos(totalAngle);
-        double camY = L1 * Math.sin(arm1Angle) + CAM_OFFSET_X * Math.sin(totalAngle);
-        double camZ = CAM_OFFSET_Z;  // Assuming camera is at constant height
 
         for (int i = 0; i < colorCoords.size(); i++) {
             Double[] relCent = colorCoords.get(i).clone();
@@ -351,25 +248,26 @@ public class ExcludePipeline extends OpenCvPipeline {
             objX_cam = relCent[0];  // Right/Left in camera view
             objY_cam = relCent[1];  // Down/Up in camera view
             objZ_cam = relCent[2];  // Forward in camera view
+            double angle = relCent[3];
 
+            objX_base = objX_cam + horizontal_offset;
 
-            // Transform to arm base coordinates
-//            double objX_base = camX +
-//                    objZ_cam * Math.cos(totalAngle) -
-//                    objX_cam * Math.sin(totalAngle);
-            double objX_base = objX_cam + horizontal_offset;
-
-            double objY_base = objY_cam*Math.cos(camera_tilt) - objZ_cam*Math.sin(camera_tilt) + forward_offset;
+            objY_base = 18.0*Math.pow((-objY_cam+18.0)/18.0,k) + forward_offset;
 
             // Calculate distance to end effector
             double endEffectorX = 0;
-            double endEffectorY = L1 * Math.cos(arm1FloorAngle) + L2 * Math.cos(totalFloorAngle);
-
+            double endEffectorY;
+            if (chamberPos) {
+                endEffectorY = PoseStorage.grabColorPose.position.y + 45;
+            }
+            else{
+                endEffectorY = PoseStorage.grabColorPose.position.y - 94;
+            }
             double dx = objX_base - endEffectorX;
             double dy = objY_base - endEffectorY;
             double dist = dx*dx + dy*dy;
 
-            if (dist < minDist) {
+            if (dist < minDist && angle > 50 && angle < 120) {
                 coord = i;
                 minDist = dist;
                 // Store transformed coordinates for later use
@@ -379,9 +277,11 @@ public class ExcludePipeline extends OpenCvPipeline {
             }
         }
 
-        if (matchedCenters.isEmpty())
-            return new Double[]{100.0, 100.0, 100.0, 100.0};
-        else return matchedCenters.get(matchedCenters.size()-1);
+        if (matchedCenters.isEmpty()){
+            return new Double[]{100.0, 100.0, 100.0, 100.0};}
+        else {
+            return matchedCenters.get(matchedCenters.size()-1);
+        }
     }
 
     public ArrayList<Double[]> contoursToCoords() {
@@ -415,87 +315,33 @@ public class ExcludePipeline extends OpenCvPipeline {
                 double height = distances[0];
                 if (height != 0) {  // Avoid division by zero
                     double aspectRatio = width / height;
-//                    if (minAspectRatio <= aspectRatio && aspectRatio <= maxAspectRatio) {
+//                  if (minAspectRatio <= aspectRatio && aspectRatio <= maxAspectRatio) {
                         // Draw the bounding rectangle on the image
 
-                        double rotRectAngle = minAreaRect.angle;
-                        if (minAreaRect.size.width < minAreaRect.size.height) {
-                            rotRectAngle += 90;
-                        }
-
-                        // Compute the angle and store it
-                        double angle = (rotRectAngle);
-
-
-                        // Order the image points in the same order as object points
-                        orderedRectPoints = orded;
-
-                        int classify = 0;
-                        if (aspectRatio < 3.5 / 1.5 - CLASSDOWN_TOL) {
-                            classify = 1;
-                        } else if (aspectRatio > 3.5 / 1.5 + CLASSUP_TOL) {
-                            classify = 2;
-                        }
-                        if (classify == 2) {
-                            rlObjectPoints = objectPoints2;
-                        } else if (classify == 1) {
-                            rlObjectPoints = objectPoints1;
-                        } else {
-                            rlObjectPoints = objectPoints;
-                            orderedRectPoints = orderCorner(orderedRectPoints);
-                        }
-                        imagePoints = new MatOfPoint2f(orderedRectPoints);
-
-                        boolean success = Calib3d.solvePnP(
-                                rlObjectPoints, // Object points in 3D
-                                imagePoints,  // Corresponding image points
-                                cameraMatrix,
-                                distCoeffs,
-                                rvec,
-                                tvec,
-                                false,
-                                Calib3d.SOLVEPNP_P3P
-                        );
-                        if(printStuff) {
-                            for (int j = 0; j < 4; j++) {
-                                Imgproc.line(boundingImage, box[j], box[(j + 1) % 4], new Scalar(0, 0, 255), 2);
-                            }
-                        }
-                        if (success) {
-                            // After solvePnP success
-                            double[] coords = new double[3];
-                            tvec.get(0, 0, coords);
-
-// Calculate empirical distance scaling
-                            double multiplia = sqrt(aspectRatio / (3.5 / 1.5));
-                            if (multiplia < 1) multiplia = 1 / multiplia;
-
-                            double areaRatio = Imgproc.contourArea(contour) /
-                                    (minAreaRect.size.height * minAreaRect.size.width);
-                            double distScale = 1.16 * pow(areaRatio, AREA_RATIO_WEIGHT) * multiplia;
-
-// Apply scaling only to distance estimate
-                            double distance = coords[2] * distScale;
-
-                            camCent = new Double[]{coords[0],  // Raw camera-relative X
-                                    coords[1],  // Raw camera-relative Y
-                                    coords[2],  // Raw camera-relative Z
-                                    angle};       // Detection angle
-// Store raw coordinates - we'll transform in matchedCoords
-                            centers.add(camCent);
-
-                            if (center != null) {
-//                                packet.put("CAM X", center[0]);
-//                                packet.put("CAM y", center[1]);
-//                                packet.put("CAM Z", center[2]);
-//                                packet.put("classif", classify);
-//                                packet.put("aspectRatio", aspectRatio);
-//                                packet.put("area", Imgproc.contourArea(contour));
-//                                packet.put("color", color);
-                            }
-
-//                        }
+                    double rotRectAngle = minAreaRect.angle;
+                    if (minAreaRect.size.width < minAreaRect.size.height) {
+                        rotRectAngle += 90;
                     }
+
+                    // Compute the angle and store it
+                    double angle = (rotRectAngle);
+
+                    if(printStuff) {
+                        for (int j = 0; j < 4; j++) {
+                            Imgproc.line(boundingImage, box[j], box[(j + 1) % 4], new Scalar(0, 0, 255), 2);
+                        }
+                    }
+                    double[] coords = new double[3];
+                    coords[0] = (orded[0].x+orded[1].x+orded[2].x+orded[3].x)/4.0 * inchPerPixel_x;
+                    coords[1] = (orded[0].y+orded[1].y+orded[2].y+orded[3].y)/4.0 * inchPerPixel_y;
+                    coords[2] = (1000);
+
+                    camCent = new Double[]{coords[0],  // Raw camera-relative X
+                            coords[1],  // Raw camera-relative Y
+                            coords[2],  // Raw camera-relative Z
+                            angle};       // Detection angle
+// Store raw coordinates - we'll transform in matchedCoords
+                    centers.add(camCent);
                 }
             }
         }
@@ -507,76 +353,6 @@ public class ExcludePipeline extends OpenCvPipeline {
         return Math.sqrt(pow(p2.x - p1.x, 2) + pow(p2.y - p1.y, 2));
     }
 
-    public static Point[] orderCorner(Point[] pts) {
-        if (pts.length != 4) {
-            throw new IllegalArgumentException("Exactly four points are required.");
-        }
-        Point[] sortedByDistance = {pts[0], null, null};
-        double d1 = distance(pts[0], pts[1]);
-        double d2 = distance(pts[0], pts[2]);
-        double d3 = distance(pts[0], pts[3]);
-        Point[] orderedPts = new Point[4];
-        if (d1 < d2 && d1 < d3) {
-            //  3 0 1 2, 3 1 0 2, 2 1 0 3, 2 0 1 3
-            int[] shorts = {0, 1};
-            int[] longs = {2, 3};
-            if (isCC(pts[longs[0]], pts[shorts[0]], pts[shorts[1]], pts[longs[1]])) {
-                orderedPts = new Point[]{pts[longs[0]], pts[shorts[0]], pts[shorts[1]], pts[longs[1]]};
-            } else if (isCC(pts[longs[1]], pts[shorts[0]], pts[shorts[1]], pts[longs[0]])) {
-                orderedPts = new Point[]{pts[longs[1]], pts[shorts[0]], pts[shorts[1]], pts[longs[0]]};
-            } else if (isCC(pts[longs[0]], pts[shorts[1]], pts[shorts[0]], pts[longs[1]])) {
-                orderedPts = new Point[]{pts[longs[0]], pts[shorts[1]], pts[shorts[0]], pts[longs[1]]};
-            } else {
-                orderedPts = new Point[]{pts[longs[1]], pts[shorts[1]], pts[shorts[0]], pts[longs[0]]};
-            }
-        } else if (d2 < d3) {
-            int[] shorts = {0, 2};
-            int[] longs = {1, 3};
-            if (isCC(pts[longs[0]], pts[shorts[0]], pts[shorts[1]], pts[longs[1]])) {
-                orderedPts = new Point[]{pts[longs[0]], pts[shorts[0]], pts[shorts[1]], pts[longs[1]]};
-            } else if (isCC(pts[longs[1]], pts[shorts[0]], pts[shorts[1]], pts[longs[0]])) {
-                orderedPts = new Point[]{pts[longs[1]], pts[shorts[0]], pts[shorts[1]], pts[longs[0]]};
-            } else if (isCC(pts[longs[0]], pts[shorts[1]], pts[shorts[0]], pts[longs[1]])) {
-                orderedPts = new Point[]{pts[longs[0]], pts[shorts[1]], pts[shorts[0]], pts[longs[1]]};
-            } else {
-                orderedPts = new Point[]{pts[longs[1]], pts[shorts[1]], pts[shorts[0]], pts[longs[0]]};
-            }
-        } else {
-            int[] shorts = {0, 3};
-            int[] longs = {1, 2};
-            if (isCC(pts[longs[0]], pts[shorts[0]], pts[shorts[1]], pts[longs[1]])) {
-                orderedPts = new Point[]{pts[longs[0]], pts[shorts[0]], pts[shorts[1]], pts[longs[1]]};
-            } else if (isCC(pts[longs[1]], pts[shorts[0]], pts[shorts[1]], pts[longs[0]])) {
-                orderedPts = new Point[]{pts[longs[1]], pts[shorts[0]], pts[shorts[1]], pts[longs[0]]};
-            } else if (isCC(pts[longs[0]], pts[shorts[1]], pts[shorts[0]], pts[longs[1]])) {
-                orderedPts = new Point[]{pts[longs[0]], pts[shorts[1]], pts[shorts[0]], pts[longs[1]]};
-            } else {
-                orderedPts = new Point[]{pts[longs[1]], pts[shorts[1]], pts[shorts[0]], pts[longs[0]]};
-            }
-        }
-
-
-        return orderedPts;
-    }
-
-    // Helper method to calculate the dot product of two vectors
-    double dotProduct(Point p1, Point p2) {
-        return p1.x * p2.x + p1.y * p2.y;
-    }
-
-    // Helper method to calculate the magnitude of a vector
-    double magnitude(Point p) {
-        return Math.sqrt(p.x * p.x + p.y * p.y);
-    }
-
-    // Helper method to calculate the angle between two vectors represented by Points
-    double calculateAngle(Point p1, Point p2) {
-        double dotProd = dotProduct(p1, p2);
-        double magP1 = magnitude(p1);
-        double magP2 = magnitude(p2);
-        double cosTheta = dotProd / (magP1 * magP2);
-        return Math.acos(cosTheta) * (180.0 / Math.PI); // Return the angle in degrees
-    }
 
     public static Point[] orderPoints(Point[] pts) {
         if (pts.length != 4) {

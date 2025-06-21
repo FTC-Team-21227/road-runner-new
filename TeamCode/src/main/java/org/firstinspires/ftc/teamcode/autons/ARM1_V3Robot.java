@@ -44,6 +44,7 @@ public class ARM1_V3Robot {
     private final double down = Subsystem_Constants.down1;
     private final double sub = Subsystem_Constants.sub1;
     private final double vertSub1 = Subsystem_Constants.vertSub1;
+    private final double vertSub1_auto = Subsystem_Constants.vertSub1_auto;
     private final double vertFloor1 = Subsystem_Constants.vertFloor1;
     double ARM1_OFFSET = TunePID_MotionProfile.ARM1_OFFSET;
     double ARM2_OFFSET = TunePID_MotionProfile.ARM2_OFFSET;
@@ -288,7 +289,7 @@ public class ARM1_V3Robot {
     }
 
     public Action liftRung_FirstSecond(double waitseconds) {
-        return new LiftTarget(highRung_First - 4, waitseconds);
+        return new LiftTarget(highRung_First - 3, waitseconds);
     }
 
     public Action liftWall(double waitseconds) {
@@ -325,6 +326,9 @@ public class ARM1_V3Robot {
 
     public Action liftVertSub(double waitseconds) {
         return new LiftTarget(vertSub1, waitseconds);
+    }
+    public Action liftVertSub_Auto(double waitseconds){
+        return new LiftTarget(vertSub1_auto,waitseconds);
     }
 
     public Action liftVertFloor(double waitseconds) {

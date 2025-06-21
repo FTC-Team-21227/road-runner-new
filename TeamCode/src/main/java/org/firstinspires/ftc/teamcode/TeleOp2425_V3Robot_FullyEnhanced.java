@@ -915,7 +915,7 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
 //                Targeting_Angle = Targeting_Angle + 360;
 //            }
         }
-        if (gamepad1.start) { //into submersible (not needed bc wall preset?)
+        if (gamepad1.touchpad) { //into submersible (not needed bc wall preset?)
             if (intake_angle == intake_AngleVertical){
                 target1 = vertSub1;
                 target2 = vertSub2;
