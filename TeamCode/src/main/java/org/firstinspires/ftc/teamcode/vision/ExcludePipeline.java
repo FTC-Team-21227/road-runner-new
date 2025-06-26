@@ -85,8 +85,8 @@ public class ExcludePipeline extends OpenCvPipeline {
 
 
     public ExcludePipeline(Telemetry telemetry, boolean chamberPos) {
-        if (chamberPos) {horizontal_offset = -10 /*5*/ /*-11.5*/; camera_tilt = Math.toRadians(36); forward_offset = 0; inchPerPixel_x = 17.0/640; inchPerPixel_y = 18.0/480; k = Math.log(14.0/2)/Math.log(14.17/3.68);} //30; //45; //50 /*30*/;}
-        else {horizontal_offset = -8 /*5*/ /*-9.5*/; camera_tilt = Math.toRadians(0); forward_offset = -3; inchPerPixel_x = 10.5/640; inchPerPixel_y = 7.0/480; k=1;
+        if (chamberPos) {horizontal_offset = -9.5 /*5*/ /*-11.5*/; camera_tilt = Math.toRadians(36); forward_offset = 0; inchPerPixel_x = 17.0/640; inchPerPixel_y = 18.0/480; k = Math.log(14.0/2)/Math.log(14.17/3.68);} //30; //45; //50 /*30*/;}
+        else {horizontal_offset = 7 /*-8*/ /*5*/ /*-9.5*/; camera_tilt = Math.toRadians(0); forward_offset = -2.5 /*-3*/; inchPerPixel_x = 10.5/640; inchPerPixel_y = 7.0/480; k=1;
         } //30; //45; //50 /*30*/;}
 //        double fx = 1647 * FCL; // Replace with your camera's focal length in pixels
 //        double fy = 1647 * FCL;
@@ -170,16 +170,17 @@ public class ExcludePipeline extends OpenCvPipeline {
         if (!contours.isEmpty()) {
             Double[] centerd = matchedCoords(colorCoords, colorCoords);
             if (centerd[0] != 100) center = convertToDoubleArray(centerd);
+            if (printStuff){
             telemetry.addLine("we have" + contours.size() + " contours :))");
             // After setting center
             telemetry.addData("Valid Center", center[0] != 0);
             telemetry.addData("Contour Count", contours.size());
-            telemetry.addData("ColorCoords Count", colorCoords.size());
+            telemetry.addData("ColorCoords Count", colorCoords.size());}
         }
-        else{
+        else if (printStuff){
             telemetry.addLine("contours are empty!!");
         }
-        telemetry.update();
+        if (printStuff) telemetry.update();
         // Replace the final return section with:
         Mat result;
         if(printStuff) {
@@ -226,6 +227,7 @@ public class ExcludePipeline extends OpenCvPipeline {
     }
 
     public synchronized double[] getCenter(@NonNull TelemetryPacket packet) {
+        if (printStuff){
         packet.put("objX_cam", objX_cam);
         packet.put("objY_cam", objY_cam);
         packet.put("objZ_cam", objZ_cam);
@@ -234,7 +236,7 @@ public class ExcludePipeline extends OpenCvPipeline {
         packet.put("CAM Z", camCent[2]);
         packet.put("angle", camCent[3]);
         packet.put("objX_base", objX_base);
-        packet.put("objY_base", objY_base);
+        packet.put("objY_base", objY_base);}
         return center;
     }
     public Double[] matchedCoords(ArrayList<Double[]> colorCoords, ArrayList<Double[]> allCoords) {
@@ -250,10 +252,14 @@ public class ExcludePipeline extends OpenCvPipeline {
             objZ_cam = relCent[2];  // Forward in camera view
             double angle = relCent[3];
 
-            objX_base = objX_cam + horizontal_offset;
-
-            objY_base = 18.0*Math.pow((-objY_cam+18.0)/18.0,k) + forward_offset;
-
+            if (chamberPos)
+                objX_base = objX_cam + horizontal_offset;
+            else
+                objX_base = -objX_cam + horizontal_offset;
+            if (chamberPos)
+                objY_base = 18.0*Math.pow((-objY_cam+18.0)/18.0,k) + forward_offset;
+            else
+                objY_base = 7.0*Math.pow((objY_cam)/7.0,k) + forward_offset;
             // Calculate distance to end effector
             double endEffectorX = 0;
             double endEffectorY;
@@ -261,7 +267,7 @@ public class ExcludePipeline extends OpenCvPipeline {
                 endEffectorY = PoseStorage.grabColorPose.position.y + 45;
             }
             else{
-                endEffectorY = PoseStorage.grabColorPose.position.y - 94;
+                endEffectorY = PoseStorage.grabYellowPose.position.y - 94;
             }
             double dx = objX_base - endEffectorX;
             double dy = objY_base - endEffectorY;

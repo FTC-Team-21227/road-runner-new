@@ -15,13 +15,13 @@ public class Subsystem_Constants {
     public final static double floor1 = 0.6217;
     public final static double down1 = 4.48338159887;
     public final static double vertSub1 = 13;//9.19; //10.69; //8; //14.8968;
-    public final static double sub1 = 9.19; //6.4322;
-    public final static double vertFloor1 = 8; //8.1777;
+    public final static double sub1 = 9.2; //9.19; //6.4322;
+    public final static double vertFloor1 = 9.2; //8; //8.1777;
     public final static double vertSub1_auto = 27.78;
     public final static double highBasket2_auto = 141.1539;
     public final static double highBasket2_teleop = 131.0525; //156.6604; //141.1539; //131.0525;
     public final static double highRung2 = 91-0.722; //91; //90.7355; //90.2924; // 88.72; //87.1025; //90.381; //91.7102;//94.457; //90.381; //92.6;
-    public final static double highRung2_2 = 35.8296; //34.8296; //34.3296; //36.3296; //34.4688; //36.5955; //35.5321; //38.7221;//36.241; //33.76; //33.5828; //35; //37.836; //33.76; //38.3676; //37.1271; //31.1093;
+    public final static double highRung2_2 = 35; //34.5; //33.8296; //35.8296; //34.8296; //34.3296; //36.3296; //34.4688; //36.5955; //35.5321; //38.7221;//36.241; //33.76; //33.5828; //35; //37.836; //33.76; //38.3676; //37.1271; //31.1093;
     public final static double highRung2_2_teleop = 36.8296; //34.3296; //36.3296; //34.4688; //36.5955; //35.5321; //38.7221;//36.241; //33.76; //33.5828; //35; //37.836; //33.76; //38.3676; //37.1271; //31.1093;
     public final static double highRung2_First = 156.39; //157.39;
     public final static double wall2 = 156.4382; //157.9896;// 154.8883; //157.0149; //154.8883; //156.749
@@ -56,8 +56,8 @@ public class Subsystem_Constants {
 
     public final static double claw_AngleScale0 = 0;
     public final static double claw_AngleScale1 = 0.7;
-    public final static double claw_AngleForward = 0.0571;
-    public final static double claw_AngleBackward = 1;
+    public final static double claw_AngleForward = 0; //0.0071; //0.0571;
+    public final static double claw_AngleBackward = 0.9429; //.95; // 1;
     public final static double claw_AngleLeft = 0;
 
     public final static double sweeperScale0 = 0.15;

@@ -29,12 +29,12 @@ public class AUTON2025REDRIGHT_V3Robot extends LinearOpMode {
         CLAW_ANGLE_NEW claw_angle = new CLAW_ANGLE_NEW(hardwareMap);
         SWEEPER sweeper = new SWEEPER(hardwareMap);
         double firstSpecDistance = -38;
-        double otherSpecDistance = -37;
-        double wallGrab = -48.75;
+        double otherSpecDistance = -36; //-37;
+        double wallGrab = -46.5; //-48.75;
         double wallGrabAngle = -85;
         double frictionConstant = 0;
 //        pushing timing to the limits
-
+        MecanumDrive.PARAMS.axialGain = 2.0;
         TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose) //first specimen
                 .setTangent(Math.toRadians(120))
                 .splineToConstantHeading(new Vector2d(-1.5,firstSpecDistance),Math.toRadians(90));
@@ -53,11 +53,11 @@ public class AUTON2025REDRIGHT_V3Robot extends LinearOpMode {
         TrajectoryActionBuilder tab5 = drive.actionBuilder(new Pose2d(60, -46, Math.toRadians(-90))) //go to second specimen
                 .setTangent(Math.toRadians(90))
                 .splineToConstantHeading(new Vector2d(60, -23),Math.toRadians(90))
-                .splineToConstantHeading(new Vector2d(68+frictionConstant, -17),Math.toRadians(0))
+                .splineToConstantHeading(new Vector2d(69+frictionConstant, -17),Math.toRadians(0))
                 .setTangent(Math.toRadians(-90))
-                .splineToConstantHeading(new Vector2d(68,-35),Math.toRadians(-90))
-                .splineToConstantHeading(new Vector2d(68,-47),Math.toRadians(-90), new TranslationalVelConstraint(20)/*, new ProfileAccelConstraint(-40,60)*/);
-        TrajectoryActionBuilder tab6 = drive.actionBuilder(new Pose2d(68, -47, Math.toRadians(-90))) //pick up and place second specimen
+                .splineToConstantHeading(new Vector2d(69,-35),Math.toRadians(-90))
+                .splineToConstantHeading(new Vector2d(69,-47),Math.toRadians(-90), new TranslationalVelConstraint(20)/*, new ProfileAccelConstraint(-40,60)*/);
+        TrajectoryActionBuilder tab6 = drive.actionBuilder(new Pose2d(69, -47, Math.toRadians(-90))) //pick up and place second specimen
                 .setTangent(Math.toRadians(170))
                 .waitSeconds(0.4)
 //                .splineToConstantHeading(new Vector2d(7.5,otherSpecDistance),Math.toRadians(90));
@@ -157,7 +157,13 @@ public class AUTON2025REDRIGHT_V3Robot extends LinearOpMode {
                             intake_angle.RotatePositionNegative1(1.3),
                             sweeper.RotatePosition0(2.8)
                         ),
-                        claw.closeClaw(),
+                        claw.closeClaw()
+                )
+        );
+        MecanumDrive.PARAMS.lateralGain = 1.0;
+        MecanumDrive.PARAMS.headingGain = 2.0;
+        Actions.runBlocking(
+                new SequentialAction(
                         //pick up and place second specimen
                         new ParallelAction(
                             sweeper.RotatePosition1(0.5),

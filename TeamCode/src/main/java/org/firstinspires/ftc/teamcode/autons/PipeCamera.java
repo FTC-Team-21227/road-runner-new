@@ -37,11 +37,12 @@ public class PipeCamera {
     /*
      * EDIT THESE PARAMETERS AS NEEDED
      */
-    final boolean USING_WEBCAM = true;
+    boolean USING_WEBCAM = true;
     final BuiltinCameraDirection INTERNAL_CAM_DIR = BuiltinCameraDirection.BACK;
     final int RESOLUTION_WIDTH = 640;
     final int RESOLUTION_HEIGHT = 480;
     boolean chamberPos;
+    boolean printStuff = ExcludePipeline.printStuff;
 
     OpenCvWebcam camera;
     ExcludePipeline exclude;
@@ -70,22 +71,23 @@ public class PipeCamera {
         }
 
         camera.setPipeline(exclude);
-        RobotLog.dd("everything working so far","ue");
+        if (printStuff) RobotLog.dd("everything working so far","ue");
         camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
         {
             @Override
             public void onOpened(){
                 camera.startStreaming(640, 480, OpenCvCameraRotation.UPRIGHT); // 320, 240 res
 //                camera.setViewportRenderer(OpenCvCamera.ViewportRenderer.NATIVE_VIEW);
-                telemetry.addLine("Camera streaming started");
-                telemetry.update();
-                FtcDashboard.getInstance().startCameraStream(camera, 10);
+                if (printStuff) {
+                    telemetry.addLine("Camera streaming started");
+                    telemetry.update();
+                    FtcDashboard.getInstance().startCameraStream(camera, 10);
+                }
             }
             @Override
             public void onError(int errorCode)
             {
-                telemetry.addData("error", errorCode);
-                telemetry.update();
+                if (printStuff) RobotLog.dd("error", errorCode + "");
             }
         });
     }
@@ -126,6 +128,12 @@ public class PipeCamera {
         ExcludePipeline.isBlue = true;
         exclude.setColor(2);
     }
+    public void off(){
+        camera.closeCameraDeviceAsync(() -> {
+                    camera.stopRecordingPipeline();
+        });
+        USING_WEBCAM = false;
+    }
 
     public class computeTargetPose implements Action {
         ElapsedTime time = new ElapsedTime();
@@ -144,7 +152,7 @@ public class PipeCamera {
             if (time.seconds() < runTime) {
                 return true;
             }
-            else {
+            else if (USING_WEBCAM){
                 double[] relCent = getCenter(packet).clone();
 
 //                RobotLog.dd("RELCENT", relCent[0]+","+relCent[1]+","+relCent[2]+","+relCent[3]);
@@ -155,36 +163,40 @@ public class PipeCamera {
 //                    packet.put("relCent0", relCent[0]+"");
 //                    packet.put("relCent1", relCent[1]+"");
 //                    packet.put("angle", relCent[3]+"");
-                    RobotLog.dd("relCent0", relCent[0]+"");
-                    RobotLog.dd("relCent1", relCent[1]+"");
-                    RobotLog.dd("angle", relCent[3]+"");
+                    if (printStuff) {
+                        RobotLog.dd("relCent0", relCent[0] + "");
+                        RobotLog.dd("relCent1", relCent[1] + "");
+                        RobotLog.dd("angle", relCent[3] + "");
+                    }
 //
                     if (chamberPos) {
-                        double x = PoseStorage.grabColorPose.position.x;
+                        double x = 10.5; //PoseStorage.grabColorPose.position.x;
+                        if (PoseStorage.grabColorPose.position.x < 5.5) x = 0;
                         double y = -45; //PoseStorage.grabColorPose.position.y;
                         PoseStorage.grabColorPose = new Pose2d(x + relCent[0], y + relCent[1], Math.toRadians(90));
                     }
                     else{
                         double x = PoseStorage.grabYellowPose.position.x;
-                        double y = 94; //PoseStorage.grabYellowPose.position.y;
+                        double y = 90; //PoseStorage.grabYellowPose.position.y;
                         PoseStorage.grabYellowPose = new Pose2d(x + relCent[0], y + relCent[1], Math.toRadians(-90));
                     }
                 }
-                else{
+                else if (printStuff){
 //                    packet.addLine("no relCent detected");
                     RobotLog.d("no relCent detected");
                 }
-                if (chamberPos) {
+                if (printStuff) {
+                    if (chamberPos) {
 //                    packet.put("Pose Storage x", PoseStorage.grabColorPose.position.x+"");
 //                    packet.put("Pose Storage y", PoseStorage.grabColorPose.position.y+"");
-                    RobotLog.dd("Pose Storage x", PoseStorage.grabColorPose.position.x+"");
-                    RobotLog.dd("Pose Storage y", PoseStorage.grabColorPose.position.y+"");
-                }
-                else{
+                        RobotLog.dd("Pose Storage x", PoseStorage.grabColorPose.position.x + "");
+                        RobotLog.dd("Pose Storage y", PoseStorage.grabColorPose.position.y + "");
+                    } else {
 //                    packet.put("Pose Storage x", PoseStorage.grabYellowPose.position.x+"");
 //                    packet.put("Pose Storage y", PoseStorage.grabYellowPose.position.y+"");
-                    RobotLog.dd("Pose Storage x", PoseStorage.grabYellowPose.position.x+"");
-                    RobotLog.dd("Pose Storage y", PoseStorage.grabYellowPose.position.y+"");
+                        RobotLog.dd("Pose Storage x", PoseStorage.grabYellowPose.position.x + "");
+                        RobotLog.dd("Pose Storage y", PoseStorage.grabYellowPose.position.y + "");
+                    }
                 }
                 resetCenter();
 //                camera.stopStreaming();
@@ -192,9 +204,39 @@ public class PipeCamera {
 //                RobotLog.dd("SUB GRAB POSE", PoseStorage.grabColorPose.position.x+","+PoseStorage.grabColorPose.position.y+","+PoseStorage.grabColorPose.heading.toDouble());
                 return false;
             }
+            else return false;
         }
     }
     public Action comp (double tim) {
         return new computeTargetPose(tim);
+    }
+    public class Close implements Action {
+        ElapsedTime time = new ElapsedTime();
+        boolean start;
+        double runTime;
+        public Close(double waittim){
+            start = false;
+            runTime = waittim;
+        }
+        @Override
+        public boolean run(@NonNull TelemetryPacket packet) {
+            if (!start) {
+                time.reset();
+                start = true;
+            }
+            if (time.seconds() < runTime) {
+                return true;
+            }
+            else {
+                camera.closeCameraDeviceAsync(() -> {
+//                    camera.stopRecordingPipeline();
+                }
+                );
+                return false;
+            }
+        }
+    }
+    public Action close (double tim) {
+        return new Close(tim);
     }
 }

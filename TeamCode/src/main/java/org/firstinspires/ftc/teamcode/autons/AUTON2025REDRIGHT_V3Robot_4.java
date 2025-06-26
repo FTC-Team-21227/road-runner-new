@@ -29,12 +29,12 @@ public class AUTON2025REDRIGHT_V3Robot_4 extends LinearOpMode {
         CLAW_ANGLE_NEW claw_angle = new CLAW_ANGLE_NEW(hardwareMap);
         SWEEPER sweeper = new SWEEPER(hardwareMap);
         double firstSpecDistance = -38;
-        double otherSpecDistance = -37;
-        double wallGrab = -48.75;
+        double otherSpecDistance = -36;
+        double wallGrab = -46.5; //48.75;
         double wallGrabAngle = -85;
         double frictionConstant = 0;
 //        pushing timing to the limits
-
+        MecanumDrive.PARAMS.axialGain = 2.0;
         TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose) //first specimen
                 .setTangent(Math.toRadians(120))
                 .splineToConstantHeading(new Vector2d(-1.5,firstSpecDistance),Math.toRadians(90));
@@ -43,22 +43,22 @@ public class AUTON2025REDRIGHT_V3Robot_4 extends LinearOpMode {
                 .splineToConstantHeading(new Vector2d(-1.5,firstSpecDistance-3),Math.toRadians(-45))
                 .splineToConstantHeading(new Vector2d(32.5+frictionConstant, firstSpecDistance-3),Math.toRadians(45))
                 .splineToConstantHeading(new Vector2d(35.5,-22),Math.toRadians(90))
-                .splineToConstantHeading(new Vector2d(43+frictionConstant, -12),Math.toRadians(0))
+                .splineToConstantHeading(new Vector2d(48.5+frictionConstant, -10),Math.toRadians(0))
 //                .strafeTo(new Vector2d(50, -48))
-                .splineToConstantHeading(new Vector2d(46+frictionConstant,-22),Math.toRadians(-90))
-                .splineToConstantHeading(new Vector2d(46,-46),Math.toRadians(-90))
+                .splineToConstantHeading(new Vector2d(51.5+frictionConstant,-22),Math.toRadians(-90))
+                .splineToConstantHeading(new Vector2d(51.5,-46),Math.toRadians(-90))
                 .setTangent(Math.toRadians(90))
-                .splineToConstantHeading(new Vector2d(46, -22),Math.toRadians(90))
-                .splineToConstantHeading(new Vector2d(54+frictionConstant, -16),Math.toRadians(0))
-                .splineToConstantHeading(new Vector2d(57+frictionConstant, -22),Math.toRadians(-90))
-                .splineToConstantHeading(new Vector2d(57, -46),Math.toRadians(-90));
-        TrajectoryActionBuilder tab5 = drive.actionBuilder(new Pose2d(57, -44, Math.toRadians(-90))) //go to second specimen
+                .splineToConstantHeading(new Vector2d(51.5, -22),Math.toRadians(90))
+                .splineToConstantHeading(new Vector2d(58.5+frictionConstant, -16),Math.toRadians(0))
+                .splineToConstantHeading(new Vector2d(61.5+frictionConstant, -22),Math.toRadians(-90))
+                .splineToConstantHeading(new Vector2d(61.5, -46),Math.toRadians(-90));
+        TrajectoryActionBuilder tab5 = drive.actionBuilder(new Pose2d(61.5, -46, Math.toRadians(-90))) //go to second specimen
                 .setTangent(Math.toRadians(90))
-                .splineToConstantHeading(new Vector2d(57, -22),Math.toRadians(90))
+                .splineToConstantHeading(new Vector2d(61.5, -22),Math.toRadians(90))
                 .splineToConstantHeading(new Vector2d(66+frictionConstant, -16),Math.toRadians(0))
-                .splineToConstantHeading(new Vector2d(70+frictionConstant, -22),Math.toRadians(-90))
-                .splineToConstantHeading(new Vector2d(70,-44.5),Math.toRadians(-90));
-        TrajectoryActionBuilder tab6 = drive.actionBuilder(new Pose2d(70, -44.5, Math.toRadians(-90))) //pick up and place second specimen
+                .splineToConstantHeading(new Vector2d(69+frictionConstant, -22),Math.toRadians(-90))
+                .splineToConstantHeading(new Vector2d(69,-44.5),Math.toRadians(-90));
+        TrajectoryActionBuilder tab6 = drive.actionBuilder(new Pose2d(69, -44.5, Math.toRadians(-90))) //pick up and place second specimen
                 .setTangent(Math.toRadians(170))
                 .waitSeconds(0.4)
 //                .splineToConstantHeading(new Vector2d(7.5,otherSpecDistance),Math.toRadians(90));
@@ -106,7 +106,7 @@ public class AUTON2025REDRIGHT_V3Robot_4 extends LinearOpMode {
                 .splineToSplineHeading(new Pose2d(40,wallGrab+0.9,Math.toRadians(wallGrabAngle)),Math.toRadians(-12));
         TrajectoryActionBuilder tab14 = drive.actionBuilder(new Pose2d(40, wallGrab+0.9,Math.toRadians(wallGrabAngle))) //park
 //                .waitSeconds(0)
-                .strafeToLinearHeading(new Vector2d(-49,-78),Math.toRadians(45),new TranslationalVelConstraint(120), new ProfileAccelConstraint(-40,100));
+                .strafeToLinearHeading(new Vector2d(-46,-63),Math.toRadians(45),new TranslationalVelConstraint(120), new ProfileAccelConstraint(-40,100));
 
         Actions.runBlocking(
             new SequentialAction(
@@ -164,7 +164,13 @@ public class AUTON2025REDRIGHT_V3Robot_4 extends LinearOpMode {
                             intake_angle.RotatePositionNegative1(1),
                             sweeper.RotatePosition0(2)
                         ),
-                        claw.closeClaw(),
+                        claw.closeClaw()
+                )
+        );
+        MecanumDrive.PARAMS.lateralGain = 1.0;
+        MecanumDrive.PARAMS.headingGain = 2.0;
+        Actions.runBlocking(
+                new SequentialAction(
                         //pick up and place second specimen
                         new ParallelAction(
                             sweeper.RotatePosition1(0.5),
@@ -181,7 +187,7 @@ public class AUTON2025REDRIGHT_V3Robot_4 extends LinearOpMode {
                             arm1.waitLiftWall2(0.4,1.5), //0.5
                             arm2.waitLiftWall2(0.4,1.5),
                             claw_angle.backward(0),
-                            intake_angle.RotatePositionNegative1(0.7)
+                            intake_angle.RotatePositionNegative1(0.6)
                         ),
                         //pick up and place third specimen
                         claw.closeClaw(),
@@ -199,7 +205,7 @@ public class AUTON2025REDRIGHT_V3Robot_4 extends LinearOpMode {
                             arm1.waitLiftWall2(0.4,1.5),
                             arm2.waitLiftWall2(0.4,1.5),
                             claw_angle.backward(0),
-                            intake_angle.RotatePositionNegative1(0.7)
+                            intake_angle.RotatePositionNegative1(0.6)
                         ),
                         //pick up and place fourth specimen
                         claw.closeClaw(),
@@ -217,7 +223,7 @@ public class AUTON2025REDRIGHT_V3Robot_4 extends LinearOpMode {
                             arm1.waitLiftWall2(0.4,1.5),
                             arm2.waitLiftWall2(0.4,1.5),
                             claw_angle.backward(0),
-                            intake_angle.RotatePositionNegative1(0.7)
+                            intake_angle.RotatePositionNegative1(0.6)
                         ),
                         //pick up and place fifth specimen
                         claw.closeClaw(),
@@ -234,7 +240,7 @@ public class AUTON2025REDRIGHT_V3Robot_4 extends LinearOpMode {
                             arm1.waitLiftWall2(0.4,1.5),
                             arm2.waitLiftWall2(0.4,1.5),
                             claw_angle.backward(0),
-                            intake_angle.RotatePositionNegative1(0.7)
+                            intake_angle.RotatePositionNegative1(0.6)
                         ),
                         claw.closeClaw(),
                         new ParallelAction(
@@ -243,7 +249,8 @@ public class AUTON2025REDRIGHT_V3Robot_4 extends LinearOpMode {
                             intake_angle.RotatePosition0_basket(1),
                             fourteenthTrajectory
                         ),
-                        claw.openClaw()
+                        claw.openClaw(),
+                        arm1.waitLiftHighBasket(1000)
                 )
         );
         PoseStorage.currentPose = new Pose2d(new Vector2d(drive.localizer.getPose().position.x,drive.localizer.getPose().position.y),-Math.PI/2+drive.localizer.getPose().heading.toDouble());

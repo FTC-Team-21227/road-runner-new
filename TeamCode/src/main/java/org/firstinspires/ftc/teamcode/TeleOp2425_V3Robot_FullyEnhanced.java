@@ -23,6 +23,7 @@ import org.firstinspires.ftc.teamcode.autons.CLAW_ANGLE_NEW;
 import org.firstinspires.ftc.teamcode.autons.CLAW_NEW;
 import org.firstinspires.ftc.teamcode.autons.INTAKE_ANGLE_NEW;
 import org.firstinspires.ftc.teamcode.autons.PoseStorage;
+import org.firstinspires.ftc.teamcode.vision.ExcludePipeline;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -102,7 +103,8 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
     final double sweeperScale1 = Subsystem_Constants.sweeperScale1;
     final double closeSweeper = Subsystem_Constants.closeSweeper;
     final double openSweeper = Subsystem_Constants.openSweeper;
-    private MecanumDrive_Lock drive;
+//    private MecanumDrive_Lock drive;
+    private GoBildaPinpointDriver pinpoint;
     private DcMotor W_BL;
     private DcMotor W_BR;
     private DcMotor W_FR;
@@ -163,46 +165,46 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
     boolean startedHolding = false;
     Pose2d target;
     private List<Action> runningActions = new ArrayList<>();
-    TelemetryPacket p = new TelemetryPacket();
     double ARM1_OFFSET = TunePID_MotionProfile.ARM1_OFFSET;
     double ARM2_OFFSET = TunePID_MotionProfile.ARM2_OFFSET;
     // ARM1 Motion Profile Variables
-    private double arm1StartPos;
-    private double arm1TargetPos;
-    private double arm1DDec;
-    private boolean arm1Decelerating = false;
-
-    // ARM2 Motion Profile Variables
-    private double arm2StartPos;
-    private double arm2TargetPos;
-    private double arm2DDec;
-    private boolean arm2Decelerating = false;
+//    private double arm1StartPos;
+//    private double arm1TargetPos;
+//    private double arm1DDec;
+//    private boolean arm1Decelerating = false;
+//
+//    // ARM2 Motion Profile Variables
+//    private double arm2StartPos;
+//    private double arm2TargetPos;
+//    private double arm2DDec;
+//    private boolean arm2Decelerating = false;
 
     // Profile Parameters (tune these!)
-    private final double V_MAX = TunePID_MotionProfile.V_MAX; // Encoder ticks/sec (≈ 100° /sec if 1 tick/degree)
-    private final double A_DEC = TunePID_MotionProfile.A_DEC; // Ticks/sec² (adjust for smooth stopping)
-    private final double LOOP_TIME = TunePID_MotionProfile.LOOP_TIME; // 20ms (typical FTC loop time)
+//    private final double V_MAX = TunePID_MotionProfile.V_MAX; // Encoder ticks/sec (≈ 100° /sec if 1 tick/degree)
+//    private final double A_DEC = TunePID_MotionProfile.A_DEC; // Ticks/sec² (adjust for smooth stopping)
+//    private final double LOOP_TIME = TunePID_MotionProfile.LOOP_TIME; // 20ms (typical FTC loop time)
     Pose2d pose;
     double x;
     double y;
-    boolean inSub;
+//    boolean inSub;
     boolean lockedMode = false;
-    private final double A_LIN_DEC = 2;
-    private final double A_ANG_DEC = 2;
-    ARM1_V3Robot arm1;
-    ARM2_V3Robot arm2;
-    CLAW_NEW cLaw;
-    INTAKE_ANGLE_NEW iNtake_angle;
-    CLAW_ANGLE_NEW cLaw_angle;
+//    private final double A_LIN_DEC = 2;
+//    private final double A_ANG_DEC = 2;
+//    ARM1_V3Robot arm1;
+//    ARM2_V3Robot arm2;
+//    CLAW_NEW cLaw;
+//    INTAKE_ANGLE_NEW iNtake_angle;
+//    CLAW_ANGLE_NEW cLaw_angle;
     double target1pid;
     double target2pid;
-    private final Pose2d pickupPose = new Pose2d(23.556, 52.028,Math.toRadians(225));
-    private final Pose2d scorePose = new Pose2d(34.300, 63.909, Math.toRadians(180));
+//    private final Pose2d pickupPose = new Pose2d(23.556, 52.028,Math.toRadians(225));
+//    private final Pose2d scorePose = new Pose2d(34.300, 63.909, Math.toRadians(180));
     // Add these class variables at the top with your other declarations
     private int rbPressCount = 0;
     private double lastRbPressTime = 0;
     private static final double RB_PRESS_TIMEOUT = 1; // 1 second timeout between presses
     boolean overrideSpeed = false;
+    boolean printStuff = ExcludePipeline.printStuff;
 
     /**
      * This function is executed when this Op Mode is selected from the Driver Station.
@@ -216,11 +218,18 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
 //            telemetry.addData("Yay1!","Yay1!");
         }
         catch (Exception e){
-            initialPose = new Pose2d(0,0,Math.toRadians(90));
+            initialPose = new Pose2d(0,0,Math.toRadians(0));
 //            telemetry.addData("No!","No!");
         }
         initialHeading = Math.toDegrees(initialPose.heading.toDouble());
-        drive = new MecanumDrive_Lock(hardwareMap,initialPose);
+//        drive = new MecanumDrive_Lock(hardwareMap,initialPose);
+        pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
+        pinpoint.resetPosAndIMU();
+        try {
+            Thread.sleep(300);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         W_BL = hardwareMap.get(DcMotor.class, "W_BL");
         W_BR = hardwareMap.get(DcMotor.class, "W_BR");
         W_FR = hardwareMap.get(DcMotor.class, "W_FR");
@@ -234,11 +243,11 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
         Sweeper = hardwareMap.get(Servo.class,"Sweeper");
         ARM1Sensor = hardwareMap.get(TouchSensor.class, "ARM1Sensor");
         ARM2Sensor = hardwareMap.get(TouchSensor.class, "ARM2Sensor");
-        arm1 = PoseStorage.arm1;
-        arm2 = PoseStorage.arm2;
-        cLaw = new CLAW_NEW(hardwareMap);
-        iNtake_angle = new INTAKE_ANGLE_NEW(hardwareMap);
-        cLaw_angle = new CLAW_ANGLE_NEW(hardwareMap);
+//        arm1 = PoseStorage.arm1;
+//        arm2 = PoseStorage.arm2;
+//        cLaw = new CLAW_NEW(hardwareMap);
+//        iNtake_angle = new INTAKE_ANGLE_NEW(hardwareMap);
+//        cLaw_angle = new CLAW_ANGLE_NEW(hardwareMap);
 
         // Put initialization blocks here.
         Initialization();
@@ -249,10 +258,12 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
             // Put run blocks here.
             while (opModeIsActive()) {
                 currTime = getRuntime();
-                PoseVelocity2d currentVel = drive.updatePoseEstimate();
-                pose = drive.localizer.getPose();
-                x = pose.position.x;
-                y = pose.position.y;
+                pinpoint.update();
+//                PoseVelocity2d currentVel = drive.updatePoseEstimate();
+//                pose = drive.localizer.getPose();
+//                x = pose.position.x;
+//                y = pose.position.y;
+
 //                inSub = inSub();
                 arm1Pos = ARM1.getCurrentPosition();
                 arm2Pos = ARM2.getCurrentPosition();
@@ -266,7 +277,7 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
 //                else {
 //                    startedHolding = false;
                     Calculate_IMU_Rotation_Power(); //calculates each motor power based on IMU reading
-                    Calculate_Motor_Power(currentVel); //calculates translational and rotational motor power
+                    Calculate_Motor_Power(); //calculates translational and rotational motor power
                     //set power to each wheel motor
                     W_BL.setPower(Motor_power_BL);
                     W_BR.setPower(Motor_power_BR);
@@ -304,7 +315,7 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
                 }
                 //reset imu if necessary
                 if (gamepad2.back && !back2) {
-                    drive = new MecanumDrive_Lock(hardwareMap,new Pose2d(pose.position,Math.toRadians(90)));
+                    pinpoint.resetPosAndIMU();
                     try {
                         Thread.sleep(300);
                     } catch (InterruptedException e) {
@@ -319,14 +330,15 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
                     initialHeading = 0;
                     Targeting_Angle = 0;
                     Heading_Angle = 0;
-                    if (mode.equals("specimenCycle") || mode.equals("specimenCollect")) drive = new MecanumDrive_Lock(hardwareMap,new Pose2d(8,-2,Math.toRadians(90)));
-                    else if (mode.equals("sample")) {
-                        drive = new MecanumDrive_Lock(hardwareMap,new Pose2d(10,-16,Math.toRadians(0)));
-//                        initialHeading = -90;
-                        Targeting_Angle = -90;
-                        Heading_Angle = -90;
-                    }
-                    else drive = new MecanumDrive_Lock(hardwareMap,new Pose2d(pose.position,Math.toRadians(90)));
+//                    if (mode.equals("specimenCycle") || mode.equals("specimenCollect")) drive = new MecanumDrive_Lock(hardwareMap,new Pose2d(8,-2,Math.toRadians(90)));
+//                    else if (mode.equals("sample")) {
+//                        drive = new MecanumDrive_Lock(hardwareMap,new Pose2d(10,-16,Math.toRadians(0)));
+////                        initialHeading = -90;
+//                        Targeting_Angle = -90;
+//                        Heading_Angle = -90;
+//                    }
+//                    else
+                    pinpoint.resetPosAndIMU();
                     try {
                         Thread.sleep(300);
                     } catch (InterruptedException e) {
@@ -334,116 +346,117 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
                     }
                 }
                 back = gamepad1.back;
+                if (printStuff) {
+                    telemetry.addData("mode", mode);
+                    telemetry.addData("eState", eState);
+                    telemetry.addData("state", state);
+                    telemetry.addData("eManual", eManual);
+                    telemetry.addData("manual", manual);
+//                    telemetry.addData("inSub", inSub);
+                    telemetry.addData("Heading", Heading_Angle);
+                    telemetry.addData("Initial Heading", initialHeading);
+                    telemetry.addData("Targeting Angle", Targeting_Angle);
+                    telemetry.addData("Motor Power", Motor_Power);
+                    telemetry.addData("Side Power", Motor_side_power);
+                    telemetry.addData("FWD Power", Motor_fwd_power);
+                    telemetry.addData("IMU_Rotation Power", imu_rotation);
+                    telemetry.addData("Rotation Power", Motor_Rotation_power);
+                    telemetry.addData("Motor_Translation Power", Motor_Trans_Power);
+                    telemetry.addData("Drive x", x);
+                    telemetry.addData("Drive y", y);
+                    telemetry.addData("ARM1Pos: ", arm1Pos / ticks_in_degree_1);
+                    telemetry.addData("ARM1Target: ", target1);
+                    telemetry.addData("ARM1TargetPID: ", target1pid);
+                    telemetry.addData("ARM2 Current Angle: ", arm2Pos / ticks_in_degree_2);
+                    telemetry.addData("ARM2 Target Angle: ", target2);
+                    telemetry.addData("ARM2 TargetPID: ", target2pid);
+                    telemetry.addData("Claw", Claw.getPosition());
+                    telemetry.addData("Intake angle", Intake_Angle.getPosition());
+                    telemetry.addData("Claw angle", Claw_Angle.getPosition());
+                    telemetry.addData("ARM1 Power", ARM1.getPower());
+                    telemetry.addData("ARM2 Power", ARM2.getPower());
+                    telemetry.addData("Manual servo", manual);
+                    telemetry.addData("State time", stateTime);
+                    telemetry.addData("Run time", currTime);
+                    telemetry.addData("Loop time", getRuntime() - currTime);
+                    telemetry.addData("ARM1Calibrated", ARM1calibrated);
+                    telemetry.addData("ARM2Calibrated", ARM2calibrated);
+                    telemetry.addData("ARM1 Sensor", ARM1Sensor.isPressed());
+                    telemetry.addData("ARM2 Sensor", ARM2Sensor.isPressed());
+                    telemetry.update();
 
-//                telemetry.addData("mode", mode);
-//                telemetry.addData("eState",eState);
-//                telemetry.addData("state", state);
-//                telemetry.addData("eManual",eManual);
-//                telemetry.addData("manual", manual);
-//                telemetry.addData("inSub",inSub);
-//                telemetry.addData("Heading", Heading_Angle);
-//                telemetry.addData("Initial Heading", initialHeading);
-//                telemetry.addData("Targeting Angle", Targeting_Angle);
-//                telemetry.addData("Motor Power", Motor_Power);
-//                telemetry.addData("Side Power", Motor_side_power);
-//                telemetry.addData("FWD Power", Motor_fwd_power);
-//                telemetry.addData("IMU_Rotation Power", imu_rotation);
-//                telemetry.addData("Rotation Power", Motor_Rotation_power);
-//                telemetry.addData("Motor_Translation Power", Motor_Trans_Power);
-//                telemetry.addData("Drive x", x);
-//                telemetry.addData("Drive y", y);
-//                telemetry.addData("ARM1Pos: ", arm1Pos/ticks_in_degree_1);
-//                telemetry.addData("ARM1Target: ", target1);
-//                telemetry.addData("ARM1TargetPID: ", target1pid);
-//                telemetry.addData("ARM2 Current Angle: ", arm2Pos/ticks_in_degree_2);
-//                telemetry.addData("ARM2 Target Angle: ", target2);
-//                telemetry.addData("ARM2 TargetPID: ", target2pid);
-//                telemetry.addData("Claw", Claw.getPosition());
-//                telemetry.addData("Intake angle", Intake_Angle.getPosition());
-//                telemetry.addData("Claw angle", Claw_Angle.getPosition());
-//                telemetry.addData("ARM1 Power", ARM1.getPower());
-//                telemetry.addData("ARM2 Power", ARM2.getPower());
-//                telemetry.addData("Manual servo", manual);
-//                telemetry.addData("State time", stateTime);
-//                telemetry.addData("Run time", currTime);
-//                telemetry.addData("Loop time", getRuntime()-currTime);
-//                telemetry.addData("ARM1Calibrated",ARM1calibrated);
-//                telemetry.addData("ARM2Calibrated", ARM2calibrated);
-//                telemetry.addData("ARM1 Sensor", ARM1Sensor.isPressed());
-//                telemetry.addData("ARM2 Sensor", ARM2Sensor.isPressed());
-//                telemetry.update();
+//                    TelemetryPacket packet = new TelemetryPacket();
+//                    packet.fieldOverlay().setStroke("#3F51B5");
+//                    Drawing.drawRobot(packet.fieldOverlay(), pose);
+//                    FtcDashboard.getInstance().sendTelemetryPacket(packet);
+                }
+
+            }
+        }
+    }
+//    private void holdRobotPosition(PoseVelocity2d currentVel) {
+//        if (!startedHolding) {
+//            // Calculate stopping distance using current velocity
+//            double stoppingDistance = currentVel.linearVel.sqrNorm() / (2 * A_LIN_DEC);
+//            double stoppingAngDistance = Math.pow(currentVel.angVel,2) / (2 * A_ANG_DEC);
 //
-//                TelemetryPacket packet = new TelemetryPacket();
-//                packet.fieldOverlay().setStroke("#3F51B5");
-//                Drawing.drawRobot(packet.fieldOverlay(), pose);
-//                FtcDashboard.getInstance().sendTelemetryPacket(packet);
-
-            }
-        }
-    }
-    private void holdRobotPosition(PoseVelocity2d currentVel) {
-        if (!startedHolding) {
-            // Calculate stopping distance using current velocity
-            double stoppingDistance = currentVel.linearVel.sqrNorm() / (2 * A_LIN_DEC);
-            double stoppingAngDistance = Math.pow(currentVel.angVel,2) / (2 * A_ANG_DEC);
-
-            target = pose.plus(
-                    new Twist2d(currentVel.linearVel.times(stoppingDistance), Math.signum(currentVel.angVel) * stoppingAngDistance)
-            );
-
-            Action a = drive.actionBuilder(pose, () -> gamepad2.b)
-                    .strafeToLinearHeading(target.position, target.heading.toDouble())
-                    .build();
-            runningActions.add(a);
-            startedHolding = true;
-        }
-    }
-    private void cycleSpecimen() {
-        //use a different drive for this, if we even want to use roadrunner actions for this
-        if (!startedHolding) {
-            // Calculate stopping distance using current velocity
-
-            double firstSpecDistance = -48;
-            double otherSpecDistance = -37;
-            double wallGrab = -46;
-            double wallGrab1 = 21;
-            double wallGrabAngle = -45;
-            double frictionConstant = 0;
-            Action score = drive.actionBuilder2(pickupPose) //pick up and place fourth specimen
-                    .setTangent(Math.toRadians(45))
-                    .waitSeconds(0.6)
-                    .splineToLinearHeading(scorePose,Math.toRadians(0))
-                    .build();
-            Action grab = drive.actionBuilder2(scorePose) //park
-                    .setTangent(Math.toRadians(180))
-                    .splineToLinearHeading(pickupPose,Math.toRadians(225))
-                    .build();
-            for (int i = 0; i < 10; i ++) {
-                runningActions.add(
-                        new SequentialAction(
-                                cLaw.closeClaw(),
-                                new ParallelAction(
-                                        arm1.liftRung2(0.2, 1.7),
-                                        arm2.liftRung2(0.2, 1.7),
-                                        score,
-                                        cLaw_angle.forward(0.5)
-                                ),
-                                new ParallelAction(
-                                        cLaw.openClawMore(),
-                                        grab,
-                                        arm1.liftFloor(0.2, 1.5),
-                                        arm2.liftFloor(0.2, 1.5),
-                                        cLaw_angle.backward(0)
-                                )
-                        )
-                );
-            }
-            startedHolding = true;
-        }
-    }
+//            target = pose.plus(
+//                    new Twist2d(currentVel.linearVel.times(stoppingDistance), Math.signum(currentVel.angVel) * stoppingAngDistance)
+//            );
+//
+//            Action a = drive.actionBuilder(pose, () -> gamepad2.b)
+//                    .strafeToLinearHeading(target.position, target.heading.toDouble())
+//                    .build();
+//            runningActions.add(a);
+//            startedHolding = true;
+//        }
+//    }
+//    private void cycleSpecimen() {
+//        //use a different drive for this, if we even want to use roadrunner actions for this
+//        if (!startedHolding) {
+//            // Calculate stopping distance using current velocity
+//
+//            double firstSpecDistance = -48;
+//            double otherSpecDistance = -37;
+//            double wallGrab = -46;
+//            double wallGrab1 = 21;
+//            double wallGrabAngle = -45;
+//            double frictionConstant = 0;
+//            Action score = drive.actionBuilder2(pickupPose) //pick up and place fourth specimen
+//                    .setTangent(Math.toRadians(45))
+//                    .waitSeconds(0.6)
+//                    .splineToLinearHeading(scorePose,Math.toRadians(0))
+//                    .build();
+//            Action grab = drive.actionBuilder2(scorePose) //park
+//                    .setTangent(Math.toRadians(180))
+//                    .splineToLinearHeading(pickupPose,Math.toRadians(225))
+//                    .build();
+//            for (int i = 0; i < 10; i ++) {
+//                runningActions.add(
+//                        new SequentialAction(
+//                                cLaw.closeClaw(),
+//                                new ParallelAction(
+//                                        arm1.liftRung2(0.2, 1.7),
+//                                        arm2.liftRung2(0.2, 1.7),
+//                                        score,
+//                                        cLaw_angle.forward(0.5)
+//                                ),
+//                                new ParallelAction(
+//                                        cLaw.openClawMore(),
+//                                        grab,
+//                                        arm1.liftFloor(0.2, 1.5),
+//                                        arm2.liftFloor(0.2, 1.5),
+//                                        cLaw_angle.backward(0)
+//                                )
+//                        )
+//                );
+//            }
+//            startedHolding = true;
+//        }
+//    }
     private void Control_Servo_States() {
         if (state.equals("highBasket")) { //Intake Angle 0, swivel Claw Angle to face the basket
-            telemetry.addData("In high basket", "yes");
+            if (printStuff) telemetry.addData("In high basket", "yes");
             if (getRuntime() - stateTime > 0.25) {
                 if (intake_angle != intake_AngleBasket) {
                     Intake_Angle.setPosition(intake_AngleBasket);
@@ -452,7 +465,7 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
                 if (claw_angle != claw_AngleBackward) {
                     Claw_Angle.setPosition(claw_AngleBackward);
                     claw_angle = claw_AngleBackward;
-                    telemetry.addData("fd", "whyu not rotating");
+                    if (printStuff) telemetry.addData("fd", "whyu not rotating");
                 }
             }
         } else if (state.equals("highRung")) { //Intake Angle 0, Claw Angle 0
@@ -465,7 +478,7 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
                     Claw_Angle.setPosition(claw_AngleForward);
                     claw_angle = claw_AngleForward;
                 }
-                telemetry.addData("In high rung", "yes");
+                if (printStuff) telemetry.addData("In high rung", "yes");
             }
         } else if (state.equals("wall")) {
             if (claw_angle != claw_AngleBackward) {
@@ -477,7 +490,7 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
                     Intake_Angle.setPosition(intake_AngleWall);
                     intake_angle = intake_AngleWall;
                 }
-                telemetry.addData("In wall", "yes");
+                if (printStuff) telemetry.addData("In wall", "yes");
             }
         } else if (state.equals("enterSub")) {
             if (getRuntime() - stateTime > 0.25) {
@@ -489,7 +502,7 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
                     Claw_Angle.setPosition(claw_AngleForward);
                     claw_angle = claw_AngleForward;
                 }
-                telemetry.addData("In enter sub", "yes");
+                if (printStuff) telemetry.addData("In enter sub", "yes");
             }
         }
         else if (state.equals("enterSubVert")) {
@@ -498,7 +511,7 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
                     Claw_Angle.setPosition(claw_AngleForward);
                     claw_angle = claw_AngleForward;
                 }
-                telemetry.addData("In enter sub vert", "yes");
+                if (printStuff) telemetry.addData("In enter sub vert", "yes");
             }
         }
         else if (state.equals("droppedHighBasket")) {
@@ -507,7 +520,7 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
                     Intake_Angle.setPosition(intake_AngleBasket-0.2);
                     intake_angle = intake_AngleBasket-0.2;
                 }
-                telemetry.addData("In dropped high basket", "yes");
+                if (printStuff) telemetry.addData("In dropped high basket", "yes");
             }
         }
         else if (state.equals("drop")) {
@@ -520,7 +533,7 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
                     Intake_Angle.setPosition(intake_AngleWall_First);
                     intake_angle = intake_AngleWall_First;
                 }
-                telemetry.addData("drop", "yes");
+                if (printStuff) telemetry.addData("drop", "yes");
             }
         }
         else if (state.equals("reversedFloor")){
@@ -534,7 +547,7 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
                     claw_angle = claw_AngleBackward;
                 }
             }
-            telemetry.addData("In reversed floor", "yes");
+            if (printStuff) telemetry.addData("In reversed floor", "yes");
         }
     }
     private void Intake_Control(){
@@ -684,26 +697,6 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
         double power2 = pid2 + ff2;
         ARM2.setPower(power2);
     }
-//    private void ARM_PID_Control(){
-//        if (!state.equals("floor")){
-//            Lift_Power = 1;
-//        }
-//        controller1.setPID(p1,i1,d1);
-//        arm1Pos = ARM1.getCurrentPosition();
-//        double pid1 = controller1.calculate(arm1Pos,(int)(target1*ticks_in_degree_1)); //PID calculation
-//        double ff1 = (m1*Math.cos(Math.toRadians(target1))*x1 +
-//                m2*Math.cos(Math.atan(((x2*Math.sin(Math.toRadians(target1+target2)))+(L1*Math.sin(Math.toRadians(target1))))/((L1*Math.cos(Math.toRadians(target1)))+(x2*Math.cos(Math.toRadians(target1+target2))))))*
-//                        Math.sqrt(Math.pow((x2*Math.sin(Math.toRadians(target1+target2))+L1*Math.sin(Math.toRadians(target1))),2)+Math.pow((x2*Math.cos(Math.toRadians(target1+target2))+L1*Math.cos(Math.toRadians(target1))),2))) * f1; // feedforward calculation, change when equation is derived
-//        double power1 = pid1 + ff1;
-//        ARM1.setPower(power1*Lift_Power); //set the power
-//
-//        controller2.setPID(p2,i2,d2);
-//        arm2Pos = ARM2.getCurrentPosition();
-//        double pid2 = controller2.calculate(arm2Pos, (int)(target2*ticks_in_degree_2));
-//        double ff2 = (m2*Math.cos(Math.toRadians(target1+target2))*x2) * f2; //feedforward calculation, change when equation is derived
-//        double power2 = pid2 + ff2;
-//        ARM2.setPower(power2);
-//    }
     private boolean inSub() {
         // Check if X and Y are both between 48 and 96 inches
         return (Math.abs(x) <= 16) &&
@@ -719,7 +712,7 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
             target1 = 0;
             Target1 = target1;
             target1pid = target1;
-            arm1TargetPos = target1 * ticks_in_degree_1;
+//            arm1TargetPos = target1 * ticks_in_degree_1;
             ARM1calibrated = true;
         }
         else if (!ARM1calibrated && ARM1.getPower() != -0.2){
@@ -733,7 +726,7 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
             target2 = 0;
             Target2 = target2;
             target2pid = target2;
-            arm2TargetPos = target2 * ticks_in_degree_2;
+//            arm2TargetPos = target2 * ticks_in_degree_2;
             ARM2calibrated = true;
         }
         else if (!ARM2calibrated && ARM2.getPower() != -0.2){
@@ -944,92 +937,8 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
         } else if (gamepad1.dpad_down) {
             target2 -= 2.40399638714/3;
         }
-//        if (Target1 != target1) {
-//            Target1 = target1;
-//            initArmProfile(1, Target1*ticks_in_degree_1);
-//        }
-//        if (Target2 != target2){
-//            Target2 = target2;
-//            initArmProfile(2, Target2*ticks_in_degree_2);
-//        }
-//        // Update ARM1 target
-//        if (Math.abs(ARM1.getCurrentPosition() - arm1TargetPos) > 5) {
-//            updateArmProfile(1);
-//        }
-//        else{
-            target1pid = target1;
-//        }
-        // Update ARM2 target
-//        if (Math.abs(ARM2.getCurrentPosition() - arm2TargetPos) > 5) {
-//            updateArmProfile(2);
-//        }
-//        else{
-            target2pid = target2;
-//        }
-    }
-    private void initArmProfile(int armNumber, double targetPos) {
-        if (armNumber == 1) {
-            arm1StartPos = ARM1.getCurrentPosition();
-            arm1TargetPos = targetPos;
-            double dTotal = Math.abs(arm1TargetPos - arm1StartPos);
-            arm1DDec = (V_MAX * V_MAX) / (2 * A_DEC);
-            arm1Decelerating = (dTotal <= arm1DDec);
-        } else {
-            arm2StartPos = ARM2.getCurrentPosition();
-            arm2TargetPos = targetPos;
-            double dTotal = Math.abs(arm2TargetPos - arm2StartPos);
-            arm2DDec = (V_MAX * V_MAX) / (2 * A_DEC);
-            arm2Decelerating = (dTotal <= arm2DDec);
-        }
-    }
-    private void updateArmProfile(int armNumber) {
-        DcMotor motor;
-        double currentPos, targetPos, dDec;
-        boolean decelerating;
-        if (armNumber == 1){
-            motor = ARM1;
-            currentPos = motor.getCurrentPosition();
-            targetPos = arm1TargetPos;
-            decelerating = arm1Decelerating;
-            dDec = arm1DDec;
-        }
-        else {
-            motor = ARM2;
-            currentPos = motor.getCurrentPosition();
-            targetPos = arm2TargetPos;
-            decelerating = arm2Decelerating;
-            dDec = arm2DDec;
-        }
-        double dRemaining = Math.abs(targetPos - currentPos);
-        double direction = Math.signum(targetPos - currentPos);
-        telemetry.addData("dRemaining", dRemaining);
-
-        // Check if we need to start decelerating
-        if (!decelerating && dRemaining <= dDec) {
-            decelerating = true;
-            if (armNumber == 1) arm1Decelerating = true;
-            else arm2Decelerating = true;
-        }
-
-        // Calculate desired velocity
-        double vDesired;
-        if (decelerating) {
-            vDesired = Math.sqrt(2 * A_DEC * dRemaining);
-            vDesired = Math.min(vDesired, V_MAX);
-        } else {
-            vDesired = V_MAX;
-        }
-
-        // Update target position
-        double delta = vDesired * direction * LOOP_TIME;
-        double newTarget = currentPos + delta;
-        telemetry.addData("delta", delta);
-
-        if (armNumber == 1) {
-            target1pid = newTarget / ticks_in_degree_1; // Convert to degrees
-        } else {
-            target2pid = newTarget / ticks_in_degree_2;
-        }
+        target1pid = target1;
+        target2pid = target2;
     }
 
     /**
@@ -1063,14 +972,14 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
         target1 = ARM1.getCurrentPosition()/ticks_in_degree_1;
         Target1 = target1;
         target1pid = target1;
-        arm1TargetPos = target1 * ticks_in_degree_1;
+//        arm1TargetPos = target1 * ticks_in_degree_1;
         ARM2.setDirection(DcMotor.Direction.REVERSE);
         ARM2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         ARM2.setPower(0);
         target2 = ARM2.getCurrentPosition()/ticks_in_degree_2;
         Target2 = target2;
         target2pid = target2;
-        arm2TargetPos = target2 * ticks_in_degree_2;
+//        arm2TargetPos = target2 * ticks_in_degree_2;
         telemetry.addData("Claw",Claw.getPosition());
         Claw.scaleRange(clawScale0,clawScale1);
         Intake_Angle.scaleRange(intake_AngleScale0, intake_AngleScale1);
@@ -1084,12 +993,14 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
 
         Targeting_Angle = initialHeading;
 
-        telemetry.addData("arm1 pos", ARM1.getCurrentPosition());
-        telemetry.addData("arm2 pos", ARM2.getCurrentPosition());
-        telemetry.addData("arm1 target", target1);
-        telemetry.addData("arm2. target", target2);
+        if (printStuff) {
+            telemetry.addData("arm1 pos", ARM1.getCurrentPosition());
+            telemetry.addData("arm2 pos", ARM2.getCurrentPosition());
+            telemetry.addData("arm1 target", target1);
+            telemetry.addData("arm2. target", target2);
 
-        telemetry.update();
+            telemetry.update();
+        }
         waitForStart();
     }
 
@@ -1099,7 +1010,7 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
     private void Calculate_IMU_Rotation_Power() {
         double Angle_Difference;
         try {
-            Heading_Angle = Math.toDegrees(drive.localizer.getPose().heading.toDouble()) - 90; // + initialHeading; //degrees
+            Heading_Angle = Math.toDegrees(pinpoint.getHeading()) + initialHeading; //degrees
         }
         catch (Exception e){
             Heading_Angle = Targeting_Angle;
@@ -1127,7 +1038,7 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
     /**
      * Describe this function...
      */
-    private void Calculate_Motor_Power(PoseVelocity2d currentVel) {
+    private void Calculate_Motor_Power() {
         double Motor_FWD_input;
         double Motor_Side_input;
         double mag;
@@ -1141,7 +1052,7 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
         y = gamepad1.left_stick_y;
         mag = Math.sqrt(y*y + x*x);
         if (lockedMode && mag == 0){
-            holdRobotPosition(currentVel);
+//            holdRobotPosition(currentVel);
             return;
         }
         Motor_FWD_input = y * mag * mag;

@@ -14,6 +14,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.teamcode.MecanumDrive;
+import org.firstinspires.ftc.teamcode.vision.ExcludePipeline;
 
 @Autonomous(name = "REDRIGHT_6+0_CV")
 public class AUTON2025REDRIGHT_V4Robot_5 extends LinearOpMode {
@@ -265,9 +266,9 @@ public class AUTON2025REDRIGHT_V4Robot_5 extends LinearOpMode {
         PoseStorage.grabColorPose = new Pose2d(pose_X,-47+pose_Y,Math.toRadians(90));
 
         TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose) //first specimen
-                .setTangent(Math.toRadians(90))
+//                .setTangent(Math.toRadians(90))
                 .waitSeconds(0.3)
-                .splineToConstantHeading(new Vector2d(pose_X,firstSpecDistance),Math.toRadians(90));
+                .strafeTo(new Vector2d(pose_X,firstSpecDistance));
 
 
         MecanumDrive.PARAMS.axialGain = 2.0;
@@ -348,7 +349,7 @@ public class AUTON2025REDRIGHT_V4Robot_5 extends LinearOpMode {
                 )
         );
         Pose2d color_pose = PoseStorage.grabColorPose;
-        RobotLog.dd("COLOR_POSE", color_pose.position.x + ", " + color_pose.position.y + ", " + color_pose.heading.toDouble());
+        if (ExcludePipeline.printStuff) RobotLog.dd("COLOR_POSE", color_pose.position.x + ", " + color_pose.position.y + ", " + color_pose.heading.toDouble());
         MecanumDrive.PARAMS.axialGain = 8.0;
         MecanumDrive.PARAMS.lateralGain = 8.0;
         Action thirdTrajectory = drive.actionBuilder(new Pose2d(pose_X, firstSpecDistance, Math.toRadians(90))) //push colored samples
@@ -383,6 +384,7 @@ public class AUTON2025REDRIGHT_V4Robot_5 extends LinearOpMode {
                 new SequentialAction(
                     new ParallelAction(
 //                                claw.openClawMore(),
+                            cam.close(0),
                                 thirdTrajectory,
                                 intake_angle.RotatePosition0_left(0.5),
                                 arm1.liftVertFloor(0.2,1.1),
@@ -398,8 +400,8 @@ public class AUTON2025REDRIGHT_V4Robot_5 extends LinearOpMode {
                         new ParallelAction(
                                 secondTrajectory,
                                 intake_angle.RotatePosition0_left(0.3),
-                                arm1.liftWall_First(0.8,1.4),
-                                arm2.liftWall2_First(0.8,1.4),
+                                arm1.liftWall_First(1,1.4),
+                                arm2.liftWall2_First(1,1.4),
                                 intake_angle.RotatePositionNegative2(1.0),
                                 claw.openClaw(1.4)
                         ),
@@ -423,7 +425,7 @@ public class AUTON2025REDRIGHT_V4Robot_5 extends LinearOpMode {
                                 claw.openClawMore(),
                                 intake_angle.RotatePositionNegative1(0),
                                 arm1.liftFloor(0.3,1.1), //0.5
-                                arm2.liftFloor(0.3,1.1, false),
+                                arm2.liftFloor(0.3,1.1),
                                 claw_angle.backward(0),
                                 intake_angle.RotatePosition0(0.5),
                                 claw.closeClaw(1.2)
@@ -494,7 +496,7 @@ public class AUTON2025REDRIGHT_V4Robot_5 extends LinearOpMode {
         new Pose2d(
                 pose.position.x + 15*Math.sqrt(2),
                 pose.position.y + 15*Math.sqrt(2),
-                Math.toRadians(45)
+                pose.heading.toDouble()-Math.toRadians(90)
         );
         PoseStorage.arm1 = arm1;
         PoseStorage.arm2 = arm2;

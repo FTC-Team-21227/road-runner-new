@@ -503,7 +503,7 @@ public class AUTON2025REDRIGHT_V4Robot_4 extends LinearOpMode {
         new Pose2d(
                 pose.position.x + 15*Math.sqrt(2),
                 pose.position.y + 15*Math.sqrt(2),
-                Math.toRadians(45)
+                pose.heading.toDouble()-Math.toRadians(90)
         );
         PoseStorage.arm1 = arm1;
         PoseStorage.arm2 = arm2;
