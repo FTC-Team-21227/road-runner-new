@@ -12,7 +12,7 @@ import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvWebcam;
 
-@Autonomous(name = "AutonVisionTesting")
+//@Autonomous(name = "AutonVisionTesting")
 public class AutonVisionTesting extends LinearOpMode {
 //  VisionPortal myVisionPortal = VisionPortal.easyCreateWithDefaults(hardwareMap.get(WebcamName.class, "/Users/gracesong/Downloads/IMG_4852.png"), );
 

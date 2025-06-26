@@ -11,7 +11,6 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.Subsystem_Constants;
-import org.firstinspires.ftc.teamcode.TunePID_BangBang;
 import org.firstinspires.ftc.teamcode.TunePID_MotionProfile;
 
 public class ARM2_V4Robot {
@@ -43,11 +42,16 @@ public class ARM2_V4Robot {
     private final double sub2 = Subsystem_Constants.sub2;
     private final double vertSub2 = Subsystem_Constants.vertSub2;
     private final double vertFloor2 = Subsystem_Constants.vertFloor2;
+    // Motion Profile Variables (ADDED)
+    private double arm2StartPos;
+    private double arm2TargetPos;
+    private double arm2DDec;
+    private boolean arm2Decelerating = false;
+    private final double V_MAX = TunePID_MotionProfile.V_MAX; // Encoder ticks/sec (≈ 100° /sec if 1 tick/degree)
+    private final double A_DEC = TunePID_MotionProfile.A_DEC; // Ticks/sec² (adjust for smooth stopping)
+    private final double LOOP_TIME = TunePID_MotionProfile.LOOP_TIME; // 20ms (typical FTC loop time)
     double ARM1_OFFSET = TunePID_MotionProfile.ARM1_OFFSET;
     double ARM2_OFFSET = TunePID_MotionProfile.ARM2_OFFSET;
-    private final double BANG_BANG_POWER = TunePID_BangBang.BANG_BANG_POWER;  // Full power
-    private  final double PID_ZONE = TunePID_BangBang.PID_ZONE_2;       // Switch to PID within this distance (ticks)
-    private boolean arm2InPIDZone = false;
 
     public ARM2_V4Robot(HardwareMap hardwareMap) {
         arm2 = hardwareMap.get(DcMotor.class, "ARM2");
@@ -66,6 +70,14 @@ public class ARM2_V4Robot {
         double runTime;
         boolean startMove;
         double power = 1;
+        boolean profile = true;
+        private double profileStartTime;
+        private double profileStartPos;
+        private double profileTargetPos;
+        private double totalDistance;
+        private double decelStartDistance;
+        private boolean decelerating;
+        private double currentVelocity;
 
         public LiftTarget(double pos) {
             target2 = pos;
@@ -100,32 +112,68 @@ public class ARM2_V4Robot {
             power = pwr;
         }
 
+        public LiftTarget(double pos, double tim, double runtime, double pwr, boolean prof) {
+            target2 = pos;
+            start = false;
+            startMove = false;
+            waitTime = tim;
+            runTime = runtime;
+            power = pwr;
+            profile = prof;
+        }
+
+        private void initMotionProfile(double targetPos) {
+            profileStartPos = arm2.getCurrentPosition();
+            profileTargetPos = targetPos;
+            totalDistance = Math.abs(profileTargetPos - profileStartPos);
+            decelStartDistance = (V_MAX * V_MAX) / (2 * A_DEC);
+            decelerating = (totalDistance <= decelStartDistance);
+            currentVelocity = 0;
+        }
+
+        private double updateMotionProfile(double elapsedTime) {
+            if (elapsedTime <= 0) {
+                return profileStartPos;
+            }
+
+            double currentPos;
+            double direction = Math.signum(profileTargetPos - profileStartPos);
+            double distanceCovered = Math.abs(currentVelocity * elapsedTime);
+            double distanceRemaining = totalDistance - distanceCovered;
+
+            // Check if we should start decelerating
+            if (!decelerating && distanceRemaining <= decelStartDistance) {
+                decelerating = true;
+            }
+
+            // Update velocity
+            if (decelerating) {
+                currentVelocity = Math.sqrt(2 * A_DEC * distanceRemaining);
+                currentVelocity = Math.min(currentVelocity, V_MAX);
+            } else {
+                currentVelocity = V_MAX;
+            }
+
+            // Calculate new position
+            double deltaPos = currentVelocity * elapsedTime * direction;
+            currentPos = profileStartPos + deltaPos;
+
+            // Apply final position when close enough
+            if (Math.abs(profileTargetPos - currentPos) < 10) {
+                return profileTargetPos;
+            }
+            return currentPos;
+        }
+
         public double ARM_Control_PID(@NonNull TelemetryPacket packet) {
-            double power2;
             double target1 = PoseStorage.target1; //NEW
-            packet.addLine("target1pos2:"+target1); //NEW
-
-            int target2Ticks = (int)(target2 * ticks_in_degree_2);
-            int current2 = arm2.getCurrentPosition();
-
-            // ARM1: Switch between bang-bang and PID
-            double error2 = target2Ticks - current2;
-            arm2InPIDZone = (Math.abs(error2) < PID_ZONE);
-
+            packet.addLine("target1pos2:"+target2pid); //NEW
             double theta1_actual = Math.toRadians(target1 + ARM1_OFFSET);
-            double theta2_actual = Math.toRadians(target1 + ARM1_OFFSET + target2 + ARM2_OFFSET);
-
-            // ARM1: PID near target
-            if (arm2InPIDZone) {
-                double pid2 = controller2.calculate(current2, (int)(target2pid*ticks_in_degree_2));
-                double ff2 = m2 * x2 * Math.cos(theta2_actual) * f2;
-                power2 = (pid2+ff2);
-            }
-            else{
-                power2 = (Math.signum(error2) * BANG_BANG_POWER);
-            }
-
-            return power2*power;
+            double theta2_actual = Math.toRadians(target1 + ARM1_OFFSET + target2pid + ARM2_OFFSET);
+            int arm2Pos = arm2.getCurrentPosition();
+            double pid2 = controller2.calculate(arm2Pos, (int)(target2pid*ticks_in_degree_2));
+            double ff2 = m2 * x2 * Math.cos(theta2_actual) * f2;
+            return (pid2 + ff2) * power;
         }
 
         @Override
@@ -134,6 +182,7 @@ public class ARM2_V4Robot {
                 time.reset();
                 start = true;
             }
+            double currentTime = time.seconds();
             packet.addLine("time.seconds():"+(time.seconds()));
             packet.addLine("arm2pos:"+(arm2.getCurrentPosition()));
 //            packet.addLine("target1pos:"+target1);
@@ -143,8 +192,14 @@ public class ARM2_V4Robot {
                 if (time.seconds() > waitTime) {
                     if (!startMove){
                         PoseStorage.target2 = target2;
+                        initMotionProfile(target2 * ticks_in_degree_2);
+                        profileStartTime = currentTime;
                         startMove = true;
                     }
+                    double elapsed = currentTime - profileStartTime;
+                    double desiredPosition = updateMotionProfile(elapsed);
+                    target2pid = desiredPosition / ticks_in_degree_2;
+
                     double power = ARM_Control_PID(packet /*new*/);
                     packet.addLine("power2:" + power);
                     arm2.setPower(power);
@@ -189,8 +244,10 @@ public class ARM2_V4Robot {
     public Action liftHighBasket(double waitseconds, double seconds) {return new LiftTarget(highBasket2,waitseconds,seconds);}
     public Action liftRung(double waitseconds, double seconds) {return new LiftTarget(highRung2,waitseconds,seconds);}
     public Action liftRung2(double waitseconds, double seconds) {return new LiftTarget(highRung2_2,waitseconds,seconds);}
+    public Action liftRung2(double waitseconds, double seconds,boolean profile) {return new LiftTarget(highRung2_2,waitseconds,seconds,1,profile);}
     public Action liftRung2_First(double waitseconds, double seconds) {return new LiftTarget(highRung2_First,waitseconds,seconds);}
     public Action liftRung2First(double waitseconds, double seconds) {return new LiftTarget(highRung2_2+0.3,waitseconds,seconds);}
+    public Action liftRung2First(double waitseconds, double seconds,boolean profile) {return new LiftTarget(highRung2_2+0.3,waitseconds,seconds,1,profile);}
     public Action liftWall(double waitseconds, double seconds) {return new LiftTarget(wall2,waitseconds,seconds);}
     public Action liftWall2(double waitseconds, double seconds) {return new LiftTarget(wall2_2,waitseconds,seconds);}
     public Action liftWall2_First(double waitseconds, double seconds) {return new LiftTarget(wall2_First,waitseconds,seconds);}
@@ -204,4 +261,5 @@ public class ARM2_V4Robot {
     public Action liftRung2(double waitseconds,double seconds, double power) {return new LiftTarget(highRung2_2, waitseconds, seconds, power);}
     public Action liftRung2_First(double waitseconds,double seconds, double power) {return new LiftTarget(highRung2_First, waitseconds, seconds, power);}
     public Action liftRungFirst(double waitseconds,double seconds, double power) {return new LiftTarget(highRung2+0.75, waitseconds, seconds,power);}
+    public Action liftFloor(double waitseconds, double seconds, boolean profile) {return new LiftTarget(floor2,waitseconds,seconds, 1, profile);}
 }

@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
+import com.arcrobotics.ftclib.command.Subsystem;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -17,6 +18,7 @@ public class CLAW_NEW {
     final double closeClaw = Subsystem_Constants.closeClaw;
     final double openClaw = Subsystem_Constants.openClaw;
     final double openMore = Subsystem_Constants.openMore;
+    final double openLess = Subsystem_Constants.openLess;
     public CLAW_NEW(HardwareMap hardwareMap) {
         Claw = hardwareMap.get(Servo.class, "Claw");
         Claw.scaleRange(clawScale0,clawScale1);
@@ -69,5 +71,11 @@ public class CLAW_NEW {
     }
     public Action openClawMore(double runt) {
         return new MoveClaw(openMore, runt);
+    }
+    public Action openClawLess() {
+        return new MoveClaw(openLess);
+    }
+    public Action openClawLess(double runt) {
+        return new MoveClaw(openLess, runt);
     }
 }

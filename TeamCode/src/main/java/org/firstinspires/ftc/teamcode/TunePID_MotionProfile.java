@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 @Config
-@TeleOp
+//@TeleOp
 public class TunePID_MotionProfile extends OpMode {
     private DcMotorEx ARM1; //bottom arm
     private DcMotorEx ARM2; //top arm
