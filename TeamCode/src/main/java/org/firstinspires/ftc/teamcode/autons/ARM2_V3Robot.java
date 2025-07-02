@@ -13,8 +13,10 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.Subsystem_Constants;
 import org.firstinspires.ftc.teamcode.TunePID;
 import org.firstinspires.ftc.teamcode.TunePID_MotionProfile;
+import org.firstinspires.ftc.teamcode.vision.ExcludePipeline;
 
 public class ARM2_V3Robot {
+    boolean printStuff = ExcludePipeline.printStuff;
     private DcMotor arm2;
     //PID controllers for ARM1 and ARM2
     private PIDController controller2;
@@ -166,7 +168,7 @@ public class ARM2_V3Robot {
 
         public double ARM_Control_PID(@NonNull TelemetryPacket packet) {
             double target1 = PoseStorage.target1; //NEW
-            packet.addLine("target1pos2:"+target2pid); //NEW
+            if (printStuff) packet.addLine("target1pos2:"+target2pid); //NEW
             double theta1_actual = Math.toRadians(target1 + ARM1_OFFSET);
             double theta2_actual = Math.toRadians(target1 + ARM1_OFFSET + target2pid + ARM2_OFFSET);
             int arm2Pos = arm2.getCurrentPosition();
@@ -181,11 +183,12 @@ public class ARM2_V3Robot {
                 time.reset();
                 start = true;
             }
-            packet.addLine("time.seconds():"+(time.seconds()));
-            packet.addLine("arm2pos:"+(arm2.getCurrentPosition()));
+            if (printStuff) {
+                packet.addLine("time.seconds():" + (time.seconds()));
+                packet.addLine("arm2pos:" + (arm2.getCurrentPosition()));
 //            packet.addLine("target1pos:"+target1);
-            packet.addLine("target2pos:"+(int)(target2*ticks_in_degree_2));
-
+                packet.addLine("target2pos:" + (int) (target2 * ticks_in_degree_2));
+            }
             if (time.seconds() < runTime + waitTime/* && Math.abs(arm2.getCurrentPosition() - arm2TargetPos) > 5*/) {
                 if (time.seconds() > waitTime) {
                     if (!startMove){
@@ -195,15 +198,15 @@ public class ARM2_V3Robot {
                     }
                     updateArmProfile();
                     double power = ARM_Control_PID(packet /*new*/);
-                    packet.addLine("power2:" + power);
+                    if (printStuff) packet.addLine("power2:" + power);
                     arm2.setPower(power);
                 }
-                FtcDashboard.getInstance().sendTelemetryPacket(packet);
+                if (printStuff) FtcDashboard.getInstance().sendTelemetryPacket(packet);
                 return true;
             } else {
-                packet.addLine("Arm 2 time:" + time.seconds());
+                if (printStuff) packet.addLine("Arm 2 time:" + time.seconds());
                 arm2.setPower(0);
-                FtcDashboard.getInstance().sendTelemetryPacket(packet);
+                if (printStuff) FtcDashboard.getInstance().sendTelemetryPacket(packet);
                 return false;
             }
         }
@@ -238,8 +241,10 @@ public class ARM2_V3Robot {
     public Action liftHighBasket(double waitseconds, double seconds) {return new LiftTarget(highBasket2,waitseconds,seconds);}
     public Action liftRung(double waitseconds, double seconds) {return new LiftTarget(highRung2,waitseconds,seconds);}
     public Action liftRung2(double waitseconds, double seconds) {return new LiftTarget(highRung2_2,waitseconds,seconds);}
+    public Action liftRung2(double waitseconds, double seconds,boolean profile) {return new LiftTarget(highRung2_2,waitseconds,seconds,1,profile);}
     public Action liftRung2_First(double waitseconds, double seconds) {return new LiftTarget(highRung2_First,waitseconds,seconds);}
     public Action liftRung2First(double waitseconds, double seconds) {return new LiftTarget(highRung2_2+0.3,waitseconds,seconds);}
+    public Action liftRung2First(double waitseconds, double seconds,boolean profile) {return new LiftTarget(highRung2_2+0.3,waitseconds,seconds,1,profile);}
     public Action liftWall(double waitseconds, double seconds) {return new LiftTarget(wall2,waitseconds,seconds);}
     public Action liftWall2(double waitseconds, double seconds) {return new LiftTarget(wall2_2,waitseconds,seconds);}
     public Action liftWall2_First(double waitseconds, double seconds) {return new LiftTarget(wall2_First,waitseconds,seconds);}

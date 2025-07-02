@@ -9,13 +9,14 @@ import com.acmerobotics.roadrunner.TranslationalVelConstraint;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.vision.ExcludePipeline;
-
-@Autonomous(name = "BLUERIGHT_6+0_CV")
+@Disabled
+@Autonomous(name = "BLUERIGHT_6spec_CV_NEEDS UPDATE")
 public class AUTON2025BLUERIGHT_V4Robot extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
@@ -551,12 +552,9 @@ public class AUTON2025BLUERIGHT_V4Robot extends LinearOpMode {
         );
         Pose2d pose = drive.localizer.getPose();
         PoseStorage.currentPose =
-        new Pose2d(
-                pose.position.x + 15*Math.sqrt(2),
-                pose.position.y + 15*Math.sqrt(2),
-                pose.heading.toDouble()-Math.toRadians(90)
-        );
-        PoseStorage.arm1 = arm1;
-        PoseStorage.arm2 = arm2;
+                new Pose2d(
+                        pose.position,
+                        pose.heading.toDouble()-Math.toRadians(90)
+                );
     }
 }

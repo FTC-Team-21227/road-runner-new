@@ -16,7 +16,7 @@ import com.qualcomm.robotcore.util.RobotLog;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.vision.ExcludePipeline;
 
-@Autonomous(name = "REDRIGHT_6+0_CV_ahfspdfibapsdifbapo")
+@Autonomous(name = "REDRIGHT_6spec_CV")
 public class AUTON2025REDRIGHT_V4Robot_8 extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
@@ -32,7 +32,7 @@ public class AUTON2025REDRIGHT_V4Robot_8 extends LinearOpMode {
         SWEEPER sweeper = new SWEEPER(hardwareMap);
         double firstSpecDistance = -51;
         double otherSpecDistance = -35.5;
-        double wallGrab = -46;
+        double wallGrab = -46.5;
         double wallGrab1 = 21.5;
         double wallGrabAngle = -85;
         double frictionConstant = 0;
@@ -40,9 +40,9 @@ public class AUTON2025REDRIGHT_V4Robot_8 extends LinearOpMode {
 
         String camoora = "";
         while (camoora.equals("") && !isStopRequested()){
-            if (gamepad1.a) camoora = "a";
-            if (gamepad1.b) camoora = "b";
-            telemetry.addLine("Use Camera? (a = yes, b = no)");
+            if (gamepad1.left_trigger > 0.1) camoora = "a";
+            if (gamepad1.right_trigger > 0.1) camoora = "b";
+            telemetry.addLine("Use Camera? (RT = yes, LT = no)");
             telemetry.update();
         }
         if (camoora.equals("a")) cam.off();
@@ -278,13 +278,15 @@ public class AUTON2025REDRIGHT_V4Robot_8 extends LinearOpMode {
         if (pose_X < 5.0) firstPlace = new Vector2d(0.0, firstSpecDistance+4);
         TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose) //first specimen
 //                .setTangent(Math.toRadians(90))
-                .waitSeconds(0.3)
+<<<<<<<< HEAD:TeamCode/src/main/java/org/firstinspires/ftc/teamcode/autons/AUTON2025REDRIGHT_V4Robot_8.java
+                .waitSeconds(0.4)
 //                .splineToConstantHeading(new Vector2d(pose_X,firstSpecDistance),Math.toRadians(90));
                 .strafeTo(firstPlace);
+========
+                .waitSeconds(0.3)
+                .strafeTo(new Vector2d(pose_X,firstSpecDistance));
 
-//        TrajectoryActionBuilder tab4 = drive.actionBuilder(new Pose2d(51.5+frictionConstant, -53, Math.toRadians(90))) //first specimen
-//                .setTangent(Math.toRadians(90))
-//                .waitSeconds(1.2)
+>>>>>>>> 58bb715160d41ba8101731794519fc073136a26c:TeamCode/src/main/java/org/firstinspires/ftc/teamcode/autons/AUTON2025REDRIGHT_V4Robot_5.java
 
         MecanumDrive.PARAMS.axialGain = 2.0;
         MecanumDrive.PARAMS.lateralGain = 1.0;
@@ -348,7 +350,6 @@ public class AUTON2025REDRIGHT_V4Robot_8 extends LinearOpMode {
         );
 
         Action firstTrajectory = tab1.build();
-//        Action fourthTrajectory = tab4.build();
         Action sixthTrajectory = tab6.build();
         Action seventhTrajectory = tab7.build();
         Action eighthTrajectory = tab8.build();
@@ -388,9 +389,9 @@ public class AUTON2025REDRIGHT_V4Robot_8 extends LinearOpMode {
                 .waitSeconds(0.3)
                 .splineToConstantHeading(new Vector2d(pose_X,-48),Math.toRadians(-90))
 //                .splineToConstantHeading(new Vector2d(15,-54),Math.toRadians(-45))
-                .splineToSplineHeading(new Pose2d(39+frictionConstant, -56,Math.toRadians(-10)),Math.toRadians(0))
+                .splineToSplineHeading(new Pose2d(41+frictionConstant, -52,Math.toRadians(-30)),Math.toRadians(0))
                 .setTangent(Math.toRadians(90))
-                .splineToSplineHeading(new Pose2d(39+frictionConstant,-22,Math.toRadians(-90)),Math.toRadians(90))
+                .splineToSplineHeading(new Pose2d(41+frictionConstant,-22,Math.toRadians(-90)),Math.toRadians(90))
                 .splineToConstantHeading(new Vector2d(48.5+frictionConstant, -14),Math.toRadians(0))
                 .splineToConstantHeading(new Vector2d(51.5, -22),Math.toRadians(-90))
                 .splineToConstantHeading(new Vector2d(51.5, -46),Math.toRadians(-90))
@@ -404,12 +405,13 @@ public class AUTON2025REDRIGHT_V4Robot_8 extends LinearOpMode {
                 .splineToConstantHeading(new Vector2d(66+frictionConstant, -16),Math.toRadians(0))
                 .splineToConstantHeading(new Vector2d(69+frictionConstant, -22),Math.toRadians(-90))
                 .splineToConstantHeading(new Vector2d(69, -35.5),Math.toRadians(-90))
-                .splineToConstantHeading(new Vector2d(69, -44.5),Math.toRadians(-90), new TranslationalVelConstraint(15))
+                .splineToConstantHeading(new Vector2d(69, -46),Math.toRadians(-90), new TranslationalVelConstraint(15))
                 .build();
         Actions.runBlocking(
                 new SequentialAction(
             new ParallelAction(
 //                                claw.openClawMore(),
+<<<<<<<< HEAD:TeamCode/src/main/java/org/firstinspires/ftc/teamcode/autons/AUTON2025REDRIGHT_V4Robot_8.java
                         cam.close(0),
                         thirdTrajectory,
                         intake_angle.RotatePosition0_left(0.5),
@@ -422,22 +424,41 @@ public class AUTON2025REDRIGHT_V4Robot_8 extends LinearOpMode {
             )
         )
 //                )
+========
+                            cam.close(0),
+                                thirdTrajectory,
+                                intake_angle.RotatePosition0_left(0.5),
+                                arm1.liftVertFloor(0.2,1.1),
+                                arm2.liftVertFloor(0.2,1.1),
+                                intake_angle.RotatePosition2(1.5),
+                                claw.closeClaw(2)
+                        )
+                )
+>>>>>>>> 58bb715160d41ba8101731794519fc073136a26c:TeamCode/src/main/java/org/firstinspires/ftc/teamcode/autons/AUTON2025REDRIGHT_V4Robot_5.java
         );
         MecanumDrive.PARAMS.axialGain = 2.0;
         Actions.runBlocking(
                 new SequentialAction(
                         new ParallelAction(
                                 secondTrajectory,
+<<<<<<<< HEAD:TeamCode/src/main/java/org/firstinspires/ftc/teamcode/autons/AUTON2025REDRIGHT_V4Robot_8.java
                                 intake_angle.RotatePosition0(0.3),
-                                claw.openClaw(1.5),
+                                claw.openClaw(1.6 /*1.2*/),
                                 arm1.liftDown(2),
                                 arm2.liftDown(2),
-                                arm1.liftWall2(8,1.4),
-                                arm2.liftWall2(8,1.4),
-                                claw_angle.backward(8),
-                                intake_angle.RotatePositionNegative1(8.7),
+                                arm1.liftWall2_First(7,1.4),
+                                arm2.liftWall2(7,1.4),
+                                claw_angle.backward(7),
+                                intake_angle.RotatePositionNegative1(7.7),
                                 sweeper.RotatePosition0(9)
-                            ),
+========
+                                intake_angle.RotatePosition0_left(0.3),
+                                arm1.liftWall_First(1,1.4),
+                                arm2.liftWall2_First(1,1.4),
+                                intake_angle.RotatePositionNegative2(1.0),
+                                claw.openClaw(1.4)
+>>>>>>>> 58bb715160d41ba8101731794519fc073136a26c:TeamCode/src/main/java/org/firstinspires/ftc/teamcode/autons/AUTON2025REDRIGHT_V4Robot_5.java
+                        ),
                         claw.closeClaw()
                 )
         );
@@ -470,8 +491,8 @@ public class AUTON2025REDRIGHT_V4Robot_8 extends LinearOpMode {
                         //pick up and place second specimen
                         new ParallelAction(
                                 sweeper.RotatePosition1(0),
-                                arm1.liftRung2(0.3),
-                                arm2.liftRung2(0.3),
+                                arm1.liftRung2(0.3,2.0, false),
+                                arm2.liftRung2(0.3, 2.0, false),
                                 sixthTrajectory,
                                 claw_angle.forward(0.5),
                                 intake_angle.RotatePosition0(0.4)
@@ -479,17 +500,23 @@ public class AUTON2025REDRIGHT_V4Robot_8 extends LinearOpMode {
                         //go to third specimen
                         new ParallelAction(
                                 claw.openClawMore(),
+<<<<<<<< HEAD:TeamCode/src/main/java/org/firstinspires/ftc/teamcode/autons/AUTON2025REDRIGHT_V4Robot_8.java
                                 seventhTrajectory,
                                 arm1.liftWall2(0.4,1.3), //0.5
                                 arm2.liftWall2(0.4,1.3),
+========
+                                intake_angle.RotatePositionNegative1(0),
+                                arm1.liftFloor(0.3,1.1), //0.5
+                                arm2.liftFloor(0.3,1.1),
+>>>>>>>> 58bb715160d41ba8101731794519fc073136a26c:TeamCode/src/main/java/org/firstinspires/ftc/teamcode/autons/AUTON2025REDRIGHT_V4Robot_5.java
                                 claw_angle.backward(0),
                                 intake_angle.RotatePositionNegative1(0.6),
                                 claw.closeClaw(1.5)
                         ),
                         //pick up and place third specimen
                         new ParallelAction(
-                                arm1.liftRung2(0.1,1.5),
-                                arm2.liftRung2(0.1,1.5),
+                                arm1.liftRung2(0.1,1.5, false),
+                                arm2.liftRung2(0.1,1.5, false),
                                 eighthTrajectory,
                                 claw_angle.forward(0.3),
                                 intake_angle.RotatePosition0(0.2)
@@ -506,8 +533,8 @@ public class AUTON2025REDRIGHT_V4Robot_8 extends LinearOpMode {
                         ),
                         //pick up and place fourth specimen
                         new ParallelAction(
-                                arm1.liftRung2(0.1,1.5),
-                                arm2.liftRung2(0.1,1.5),
+                                arm1.liftRung2(0.1,1.5, false),
+                                arm2.liftRung2(0.1,1.5, false),
                                 tenthTrajectory,
                                 claw_angle.forward(0.3),
                                 intake_angle.RotatePosition0(0.2)
@@ -524,8 +551,8 @@ public class AUTON2025REDRIGHT_V4Robot_8 extends LinearOpMode {
                         ),
                         //pick up and place fifth specimen
                         new ParallelAction(
-                                arm1.liftRung2(0.1,1.5),
-                                arm2.liftRung2(0.1,1.5),
+                                arm1.liftRung2(0.1,1.5, false),
+                                arm2.liftRung2(0.1,1.5, false),
                                 twelfthTrajectory,
                                 claw_angle.forward(0.3),
                                 intake_angle.RotatePosition0(0.2)
@@ -540,8 +567,8 @@ public class AUTON2025REDRIGHT_V4Robot_8 extends LinearOpMode {
                                 claw.closeClaw(1.5)
                         ),
                         new ParallelAction(
-                                arm1.liftRung2(0.1,1.5),
-                                arm2.liftRung2(0.1,1.5),
+                                arm1.liftRung2(0.1,1.5, false),
+                                arm2.liftRung2(0.1,1.5, false),
                                 fourteenthTrajectory,
                                 claw_angle.forward(0.3),
                                 intake_angle.RotatePosition0(0.2)
@@ -553,11 +580,13 @@ public class AUTON2025REDRIGHT_V4Robot_8 extends LinearOpMode {
         Pose2d pose = drive.localizer.getPose();
         PoseStorage.currentPose =
         new Pose2d(
+<<<<<<<< HEAD:TeamCode/src/main/java/org/firstinspires/ftc/teamcode/autons/AUTON2025REDRIGHT_V4Robot_8.java
+                pose.position,
+========
                 pose.position.x + 15*Math.sqrt(2),
                 pose.position.y + 15*Math.sqrt(2),
+>>>>>>>> 58bb715160d41ba8101731794519fc073136a26c:TeamCode/src/main/java/org/firstinspires/ftc/teamcode/autons/AUTON2025REDRIGHT_V4Robot_5.java
                 pose.heading.toDouble()-Math.toRadians(90)
         );
-        PoseStorage.arm1 = arm1;
-        PoseStorage.arm2 = arm2;
     }
 }

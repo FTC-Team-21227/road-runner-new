@@ -8,6 +8,4 @@ public class PoseStorage {
     public static Pose2d grabYellowPose = new Pose2d(66.5, 90,Math.toRadians(-90));
     public static double target1 = 0;
     public static double target2 = 0;
-    public static ARM1_V3Robot arm1;
-    public static ARM2_V3Robot arm2;
 }

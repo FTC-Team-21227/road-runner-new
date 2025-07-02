@@ -14,8 +14,10 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.Subsystem_Constants;
 import org.firstinspires.ftc.teamcode.TunePID;
 import org.firstinspires.ftc.teamcode.TunePID_MotionProfile;
+import org.firstinspires.ftc.teamcode.vision.ExcludePipeline;
 
 public class ARM1_V3Robot {
+    boolean printStuff = ExcludePipeline.printStuff;
     private DcMotor arm1;
     //PID controllers for ARM1 and ARM2
     private PIDController controller1;
@@ -38,6 +40,7 @@ public class ARM1_V3Robot {
     private final double wall = Subsystem_Constants.wall1;
     private final double wallwall = Subsystem_Constants.wallwall1;
     private final double wall2 = Subsystem_Constants.wall1_2;
+    private final double wall2_First = Subsystem_Constants.wall1_2_First;
     private final double wall_First = Subsystem_Constants.wall1_First;
     private final double lowBasket = Subsystem_Constants.lowBasket1;
     private final double floor = Subsystem_Constants.floor1;
@@ -172,7 +175,7 @@ public class ARM1_V3Robot {
 
         public double ARM_Control_PID(@NonNull TelemetryPacket packet /*NEW*/) {
             double target2 = PoseStorage.target2; //NEW
-            packet.addLine("target2pos1:" + target2); //NEW
+            if (printStuff) packet.addLine("target2pos1:" + target2); //NEW
             double theta1_actual = Math.toRadians(target1pid + ARM1_OFFSET);
             double theta2_actual = Math.toRadians(target1pid + ARM1_OFFSET + target2 + ARM2_OFFSET);
             int arm1Pos = arm1.getCurrentPosition();
@@ -187,10 +190,12 @@ public class ARM1_V3Robot {
                 time.reset();
                 start = true;
             }
-            packet.addLine("time.seconds():" + (time.seconds()));
-            packet.addLine("arm1pos:" + (arm1.getCurrentPosition()));
+            if (printStuff) {
+                packet.addLine("time.seconds():" + (time.seconds()));
+                packet.addLine("arm1pos:" + (arm1.getCurrentPosition()));
 //            packet.addLine("target1pos:"+target1);
-            packet.addLine("target1pos:" + (int) (target1 * ticks_in_degree_1));
+                packet.addLine("target1pos:" + (int) (target1 * ticks_in_degree_1));
+            }
             if (time.seconds() < runTime + waitTime/* && Math.abs(arm1.getCurrentPosition() - arm1TargetPos) > 5*/) {
 //                packet.addLine("still running 1");
                 if (time.seconds() > waitTime) {
@@ -202,15 +207,15 @@ public class ARM1_V3Robot {
                     }
                     updateArmProfile();
                     double power = ARM_Control_PID(packet /*new*/);
-                    packet.addLine("power1:" + power);
+                    if (printStuff) packet.addLine("power1:" + power);
                     arm1.setPower(power);
                 }
-                FtcDashboard.getInstance().sendTelemetryPacket(packet);
+                if (printStuff) FtcDashboard.getInstance().sendTelemetryPacket(packet);
                 return true;
             } else {
-                packet.addLine("Arm 1 time:" + time.seconds());
+                if (printStuff) packet.addLine("Arm 1 time:" + time.seconds());
                 arm1.setPower(0);
-                FtcDashboard.getInstance().sendTelemetryPacket(packet);
+                if (printStuff) FtcDashboard.getInstance().sendTelemetryPacket(packet);
                 return false;
             }
         }
@@ -346,9 +351,15 @@ public class ARM1_V3Robot {
     public Action liftRung2(double waitseconds, double seconds) {
         return new LiftTarget(highRung2, waitseconds, seconds);
     }
+    public Action liftRung2(double waitseconds, double seconds,boolean profile) {
+        return new LiftTarget(highRung2, waitseconds, seconds,1,profile);
+    }
 
     public Action liftRung_First(double waitseconds, double seconds) {
         return new LiftTarget(highRung_First, waitseconds, seconds);
+    }
+    public Action liftRung_First(double waitseconds, double seconds, boolean profile) {
+        return new LiftTarget(highRung_First, waitseconds, seconds,1,profile);
     }
 
     public Action liftWall(double waitseconds, double seconds) {
@@ -357,6 +368,9 @@ public class ARM1_V3Robot {
 
     public Action liftWall2(double waitseconds, double seconds) {
         return new LiftTarget(wall2, waitseconds, seconds);
+    }
+    public Action liftWall2_First(double waitseconds, double seconds) {
+        return new LiftTarget(wall2_First, waitseconds, seconds);
     }
 
     public Action liftWall_First(double waitseconds, double seconds) {

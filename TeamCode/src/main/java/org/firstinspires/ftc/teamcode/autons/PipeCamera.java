@@ -76,7 +76,7 @@ public class PipeCamera {
         {
             @Override
             public void onOpened(){
-                camera.startStreaming(640, 480, OpenCvCameraRotation.UPRIGHT); // 320, 240 res
+                camera.startStreaming(RESOLUTION_WIDTH, RESOLUTION_HEIGHT, OpenCvCameraRotation.UPRIGHT); // 320, 240 res
 //                camera.setViewportRenderer(OpenCvCamera.ViewportRenderer.NATIVE_VIEW);
                 if (printStuff) {
                     telemetry.addLine("Camera streaming started");
@@ -130,7 +130,7 @@ public class PipeCamera {
     }
     public void off(){
         camera.closeCameraDeviceAsync(() -> {
-                    camera.stopRecordingPipeline();
+//                    camera.stopRecordingPipeline();
         });
         USING_WEBCAM = false;
     }
@@ -155,15 +155,13 @@ public class PipeCamera {
             else if (USING_WEBCAM){
                 double[] relCent = getCenter(packet).clone();
 
-//                RobotLog.dd("RELCENT", relCent[0]+","+relCent[1]+","+relCent[2]+","+relCent[3]);
-
                 if (!Arrays.equals(relCent, new double[]{0, 0, 0, 0})) {
                     resetCenter();
-//                    relCent[0] = (relCent[2] * Math.sin(arm.getRot() * PI / 180) + relCent[0] * Math.cos(arm.getRot() * PI / 180) - FOR_CONST) * FOR_MULT;
-//                    packet.put("relCent0", relCent[0]+"");
-//                    packet.put("relCent1", relCent[1]+"");
-//                    packet.put("angle", relCent[3]+"");
+//
                     if (printStuff) {
+                        packet.put("relCent0", relCent[0]+"");
+                        packet.put("relCent1", relCent[1]+"");
+                        packet.put("angle", relCent[3]+"");
                         RobotLog.dd("relCent0", relCent[0] + "");
                         RobotLog.dd("relCent1", relCent[1] + "");
                         RobotLog.dd("angle", relCent[3] + "");
@@ -177,7 +175,7 @@ public class PipeCamera {
                     }
                     else{
                         double x = PoseStorage.grabYellowPose.position.x;
-                        double y = 90; //PoseStorage.grabYellowPose.position.y;
+                        double y = /*90;*/ PoseStorage.grabYellowPose.position.y;
                         PoseStorage.grabYellowPose = new Pose2d(x + relCent[0], y + relCent[1], Math.toRadians(-90));
                     }
                 }
@@ -187,13 +185,13 @@ public class PipeCamera {
                 }
                 if (printStuff) {
                     if (chamberPos) {
-//                    packet.put("Pose Storage x", PoseStorage.grabColorPose.position.x+"");
-//                    packet.put("Pose Storage y", PoseStorage.grabColorPose.position.y+"");
+                    packet.put("Pose Storage x", PoseStorage.grabColorPose.position.x+"");
+                    packet.put("Pose Storage y", PoseStorage.grabColorPose.position.y+"");
                         RobotLog.dd("Pose Storage x", PoseStorage.grabColorPose.position.x + "");
                         RobotLog.dd("Pose Storage y", PoseStorage.grabColorPose.position.y + "");
                     } else {
-//                    packet.put("Pose Storage x", PoseStorage.grabYellowPose.position.x+"");
-//                    packet.put("Pose Storage y", PoseStorage.grabYellowPose.position.y+"");
+                    packet.put("Pose Storage x", PoseStorage.grabYellowPose.position.x+"");
+                    packet.put("Pose Storage y", PoseStorage.grabYellowPose.position.y+"");
                         RobotLog.dd("Pose Storage x", PoseStorage.grabYellowPose.position.x + "");
                         RobotLog.dd("Pose Storage y", PoseStorage.grabYellowPose.position.y + "");
                     }

@@ -47,8 +47,8 @@ public class ExcludePipeline extends OpenCvPipeline {
     List<MatOfPoint> contours = new ArrayList<>();
     boolean chamberPos;
 
-    public static boolean printStuff= true;
-    public static double RUH = 10, RLH = 150, RS = 90, RV = 210, BH = 100, BUH = 120, BS = 70, BV = 220 /*80*/, YH = 15 /*10*/ /*20*/ /*15*/ /*27*/, YUH = 40 /*30*/ /*40*/ /*30*/ /*33*/, YS = 80 /*150*/ /*85*/ /*80*/ /*100*/ /*80*/ /*100*/, YV = 210 /*243*/ /*250*/ /*150*/ /*100*/ /*150*/ /*51*/, AREA_RATIO_WEIGHT = -0.4, UPPIES = .5, MIN_AREA = 2500 /*7000*/;
+    public static boolean printStuff= false;
+    public static double RUH = 10, RLH = 150, RS = 90, RV = 200 /*175*/ /*210*/, BH = 110 /*100*/, BUH = 130 /*120*/, BS = 70, BV = 190 /*250*/ /*80*/, YH = 15 /*10*/ /*20*/ /*15*/ /*27*/, YUH = 40 /*30*/ /*40*/ /*30*/ /*33*/, YS = 80 /*150*/ /*85*/ /*80*/ /*100*/ /*80*/ /*100*/, YV = 210 /*243*/ /*250*/ /*150*/ /*100*/ /*150*/ /*51*/, AREA_RATIO_WEIGHT = -0.4, UPPIES = .5, MIN_AREA = 2500 /*7000*/;
     public static int UPPER_THRESH = 280 /*120*/, LOWER_THRESH = 20 /*60*/, YUPPER_THRESH = 240, YLOWER_THRESH = 80, KERNEL_SIZE = 2, YELLOW_KERNEL_SIZE = 2;
     public static double horizontal_offset, camera_tilt, forward_offset, inchPerPixel_x, inchPerPixel_y,k,MIN_DIST = 36;
     Mat hsv = new Mat();
@@ -86,7 +86,7 @@ public class ExcludePipeline extends OpenCvPipeline {
 
     public ExcludePipeline(Telemetry telemetry, boolean chamberPos) {
         if (chamberPos) {horizontal_offset = -9.5 /*5*/ /*-11.5*/; camera_tilt = Math.toRadians(36); forward_offset = 0; inchPerPixel_x = 17.0/640; inchPerPixel_y = 18.0/480; k = Math.log(14.0/2)/Math.log(14.17/3.68);} //30; //45; //50 /*30*/;}
-        else {horizontal_offset = 7 /*-8*/ /*5*/ /*-9.5*/; camera_tilt = Math.toRadians(0); forward_offset = -2.5 /*-3*/; inchPerPixel_x = 10.5/640; inchPerPixel_y = 7.0/480; k=1;
+        else {horizontal_offset = 7 /*-8*/ /*5*/ /*-9.5*/; camera_tilt = Math.toRadians(0); forward_offset = -6.5 /*-2.5*/ /*-3*/; inchPerPixel_x = 10.5/640; inchPerPixel_y = 7.0/480; k=1;
         } //30; //45; //50 /*30*/;}
 //        double fx = 1647 * FCL; // Replace with your camera's focal length in pixels
 //        double fy = 1647 * FCL;
@@ -252,8 +252,10 @@ public class ExcludePipeline extends OpenCvPipeline {
             objZ_cam = relCent[2];  // Forward in camera view
             double angle = relCent[3];
 
-            if (chamberPos)
+            if (chamberPos) {
+                if (PoseStorage.grabColorPose.position.x < 5) horizontal_offset += 6;
                 objX_base = objX_cam + horizontal_offset;
+            }
             else
                 objX_base = -objX_cam + horizontal_offset;
             if (chamberPos)
