@@ -389,14 +389,13 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
                     telemetry.addData("ARM2Calibrated", ARM2calibrated);
                     telemetry.addData("ARM1 Sensor", ARM1Sensor.isPressed());
                     telemetry.addData("ARM2 Sensor", ARM2Sensor.isPressed());
-                    telemetry.update();
 
 //                    TelemetryPacket packet = new TelemetryPacket();
 //                    packet.fieldOverlay().setStroke("#3F51B5");
 //                    Drawing.drawRobot(packet.fieldOverlay(), pose);
 //                    FtcDashboard.getInstance().sendTelemetryPacket(packet);
                 }
-
+                telemetry.update();
             }
         }
     }
@@ -474,7 +473,18 @@ public class TeleOp2425_V3Robot_FullyEnhanced extends LinearOpMode {
                     if (printStuff) telemetry.addData("fd", "whyu not rotating");
                 }
             }
-        } else if (state.equals("highRung")) { //Intake Angle 0, Claw Angle 0
+        }
+        else if (state.equals("lowBasket")) { //Intake Angle 0, swivel Claw Angle to face the basket
+            if (printStuff) telemetry.addData("In low basket", "yes");
+            if (getRuntime() - stateTime > 0.25) {
+                if (claw_angle != claw_AngleBackward) {
+                    Claw_Angle.setPosition(claw_AngleBackward);
+                    claw_angle = claw_AngleBackward;
+                    if (printStuff) telemetry.addData("fd", "whyu not rotating");
+                }
+            }
+        }
+        else if (state.equals("highRung")) { //Intake Angle 0, Claw Angle 0
             if (getRuntime() - stateTime > 0.25) {
                 if (intake_angle != intake_AngleRung) {
                     Intake_Angle.setPosition(intake_AngleRung);

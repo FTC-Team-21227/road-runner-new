@@ -424,7 +424,7 @@ public class AUTON2025REDRIGHT_V4Robot_8 extends LinearOpMode {
                         new ParallelAction(
                                 secondTrajectory,
                                 intake_angle.RotatePosition0(0.3),
-                                claw.openClaw(1.2),
+                                claw.openClaw(1.6 /*1.2*/),
                                 arm1.liftDown(2),
                                 arm2.liftDown(2),
                                 arm1.liftWall2_First(7,1.4),

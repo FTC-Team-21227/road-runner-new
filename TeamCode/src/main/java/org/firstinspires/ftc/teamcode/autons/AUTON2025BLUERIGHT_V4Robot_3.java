@@ -3,23 +3,20 @@ package org.firstinspires.ftc.teamcode.autons;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
-import com.acmerobotics.roadrunner.ProfileAccelConstraint;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.TranslationalVelConstraint;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.vision.ExcludePipeline;
 
-@Disabled
 @Autonomous(name = "BLUERIGHT_6spec_CV")
-public class AUTON2025BLUERIGHT_V4Robot_2 extends LinearOpMode {
+public class AUTON2025BLUERIGHT_V4Robot_3 extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         Pose2d initialPose = new Pose2d(10.5, -63.3, Math.toRadians(90));
@@ -360,17 +357,17 @@ public class AUTON2025BLUERIGHT_V4Robot_2 extends LinearOpMode {
 
         Actions.runBlocking(
                 new SequentialAction(
-                        //first specimen
-                        new ParallelAction(
-                                claw.closeClaw(),
-                                intake_angle.RotatePosition3(),
-                                arm1.liftRung_First(0,1.15),
-                                arm2.liftRung2_First(0,1.15),
-                                firstTrajectory,
-                                claw.openClawMore(1.15)
-                        ),
-                        cam.comp(0)
-                )
+            //first specimen
+            new ParallelAction(
+                claw.closeClaw(),
+                intake_angle.RotatePosition3(),
+                arm1.liftRung_First(0,1.15),
+                arm2.liftRung2_First(0,1.15),
+                firstTrajectory,
+                claw.openClawMore(1.15)
+            ),
+            cam.comp(0)
+            )
         );
         Pose2d color_pose = PoseStorage.grabColorPose;
         if (ExcludePipeline.printStuff) RobotLog.dd("COLOR_POSE", color_pose.position.x + ", " + color_pose.position.y + ", " + color_pose.heading.toDouble());
@@ -405,19 +402,19 @@ public class AUTON2025BLUERIGHT_V4Robot_2 extends LinearOpMode {
                 .build();
         Actions.runBlocking(
                 new SequentialAction(
-                        new ParallelAction(
+            new ParallelAction(
 //                                claw.openClawMore(),
-                                cam.close(0),
-                                thirdTrajectory,
-                                intake_angle.RotatePosition0_left(0.5),
-                                arm1.liftVertFloor(0.2,1.1),
-                                arm2.liftVertFloor(0.2,1.1)
-                        ),
-                        new ParallelAction(
-                                intake_angle.RotatePosition2(),
-                                claw.closeClaw(0.4)
-                        )
-                )
+                        cam.close(0),
+                        thirdTrajectory,
+                        intake_angle.RotatePosition0_left(0.5),
+                        arm1.liftVertFloor(0.2,1.1),
+                        arm2.liftVertFloor(0.2,1.1)
+            ),
+            new ParallelAction(
+                intake_angle.RotatePosition2(),
+                claw.closeClaw(0.4)
+            )
+        )
 //                )
         );
         MecanumDrive.PARAMS.axialGain = 2.0;
@@ -426,7 +423,7 @@ public class AUTON2025BLUERIGHT_V4Robot_2 extends LinearOpMode {
                         new ParallelAction(
                                 secondTrajectory,
                                 intake_angle.RotatePosition0(0.3),
-                                claw.openClaw(1.2),
+                                claw.openClaw(1.6 /*1.2*/),
                                 arm1.liftDown(2),
                                 arm2.liftDown(2),
                                 arm1.liftWall2_First(7,1.4),
@@ -549,9 +546,9 @@ public class AUTON2025BLUERIGHT_V4Robot_2 extends LinearOpMode {
         );
         Pose2d pose = drive.localizer.getPose();
         PoseStorage.currentPose =
-                new Pose2d(
-                        pose.position,
-                        pose.heading.toDouble()-Math.toRadians(90)
-                );
+        new Pose2d(
+                pose.position,
+                pose.heading.toDouble()-Math.toRadians(90)
+        );
     }
 }

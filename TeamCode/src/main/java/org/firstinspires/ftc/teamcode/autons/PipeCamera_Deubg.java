@@ -1,39 +1,27 @@
 package org.firstinspires.ftc.teamcode.autons;
 
-import android.util.Size;
-
 import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
-import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.RobotLog;
-import com.qualcomm.robotcore.util.SortOrder;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.vision.ExcludePipeline;
-import org.firstinspires.ftc.teamcode.vision.YellowPipeline;
-import org.firstinspires.ftc.vision.VisionPortal;
-import org.firstinspires.ftc.vision.opencv.ColorBlobLocatorProcessor;
-import org.firstinspires.ftc.vision.opencv.ColorRange;
-import org.firstinspires.ftc.vision.opencv.ImageRegion;
-import org.opencv.core.RotatedRect;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvWebcam;
 
 import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
 
-public class PipeCamera {
+public class PipeCamera_Deubg {
     /*
      * EDIT THESE PARAMETERS AS NEEDED
      */
@@ -42,13 +30,13 @@ public class PipeCamera {
     final int RESOLUTION_WIDTH = 640;
     final int RESOLUTION_HEIGHT = 480;
     boolean chamberPos;
-    boolean printStuff = ExcludePipeline.printStuff;
+    boolean printStuff = true; //ExcludePipeline.printStuff;
 
     OpenCvWebcam camera;
     ExcludePipeline exclude;
 //    FtcDashboard dashboard;
 
-    public PipeCamera(HardwareMap hardwareMap, Telemetry telemetry, boolean chamberPos, String color, boolean inclYellow) {
+    public PipeCamera_Deubg(HardwareMap hardwareMap, Telemetry telemetry, boolean chamberPos, String color, boolean inclYellow) {
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
 
         camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam1"), cameraMonitorViewId);
@@ -200,9 +188,9 @@ public class PipeCamera {
 //                camera.stopStreaming();
 //                camera.closeCameraDevice();
 //                RobotLog.dd("SUB GRAB POSE", PoseStorage.grabColorPose.position.x+","+PoseStorage.grabColorPose.position.y+","+PoseStorage.grabColorPose.heading.toDouble());
-                return false;
+                return true;
             }
-            else return false;
+            else return true;
         }
     }
     public Action comp (double tim) {

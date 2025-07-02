@@ -47,8 +47,8 @@ public class ExcludePipeline extends OpenCvPipeline {
     List<MatOfPoint> contours = new ArrayList<>();
     boolean chamberPos;
 
-    public static boolean printStuff= true;
-    public static double RUH = 10, RLH = 150, RS = 90, RV = 175 /*210*/, BH = 100, BUH = 120, BS = 70, BV = 250 /*80*/, YH = 15 /*10*/ /*20*/ /*15*/ /*27*/, YUH = 40 /*30*/ /*40*/ /*30*/ /*33*/, YS = 80 /*150*/ /*85*/ /*80*/ /*100*/ /*80*/ /*100*/, YV = 210 /*243*/ /*250*/ /*150*/ /*100*/ /*150*/ /*51*/, AREA_RATIO_WEIGHT = -0.4, UPPIES = .5, MIN_AREA = 2500 /*7000*/;
+    public static boolean printStuff= false;
+    public static double RUH = 10, RLH = 150, RS = 90, RV = 200 /*175*/ /*210*/, BH = 110 /*100*/, BUH = 130 /*120*/, BS = 70, BV = 190 /*250*/ /*80*/, YH = 15 /*10*/ /*20*/ /*15*/ /*27*/, YUH = 40 /*30*/ /*40*/ /*30*/ /*33*/, YS = 80 /*150*/ /*85*/ /*80*/ /*100*/ /*80*/ /*100*/, YV = 210 /*243*/ /*250*/ /*150*/ /*100*/ /*150*/ /*51*/, AREA_RATIO_WEIGHT = -0.4, UPPIES = .5, MIN_AREA = 2500 /*7000*/;
     public static int UPPER_THRESH = 280 /*120*/, LOWER_THRESH = 20 /*60*/, YUPPER_THRESH = 240, YLOWER_THRESH = 80, KERNEL_SIZE = 2, YELLOW_KERNEL_SIZE = 2;
     public static double horizontal_offset, camera_tilt, forward_offset, inchPerPixel_x, inchPerPixel_y,k,MIN_DIST = 36;
     Mat hsv = new Mat();
@@ -252,8 +252,10 @@ public class ExcludePipeline extends OpenCvPipeline {
             objZ_cam = relCent[2];  // Forward in camera view
             double angle = relCent[3];
 
-            if (chamberPos)
+            if (chamberPos) {
+                if (PoseStorage.grabColorPose.position.x < 5) horizontal_offset += 6;
                 objX_base = objX_cam + horizontal_offset;
+            }
             else
                 objX_base = -objX_cam + horizontal_offset;
             if (chamberPos)

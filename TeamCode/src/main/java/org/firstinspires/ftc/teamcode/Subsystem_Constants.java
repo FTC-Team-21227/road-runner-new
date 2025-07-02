@@ -28,7 +28,7 @@ public class Subsystem_Constants {
     public final static double highBasket2_auto = 141.1539;
     public final static double highBasket2_teleop = 131.0525; //156.6604; //141.1539; //131.0525;
     public final static double highRung2 = 91-0.722; //91; //90.7355; //90.2924; // 88.72; //87.1025; //90.381; //91.7102;//94.457; //90.381; //92.6;
-    public final static double highRung2_2 = 36; //35; //34.5; //33.8296; //35.8296; //34.8296; //34.3296; //36.3296; //34.4688; //36.5955; //35.5321; //38.7221;//36.241; //33.76; //33.5828; //35; //37.836; //33.76; //38.3676; //37.1271; //31.1093;
+    public final static double highRung2_2 = 38.5; //39; //40; //37; //36.5; //36; //35; //34.5; //33.8296; //35.8296; //34.8296; //34.3296; //36.3296; //34.4688; //36.5955; //35.5321; //38.7221;//36.241; //33.76; //33.5828; //35; //37.836; //33.76; //38.3676; //37.1271; //31.1093;
     public final static double highRung2_2_teleop = 36.8296; //34.3296; //36.3296; //34.4688; //36.5955; //35.5321; //38.7221;//36.241; //33.76; //33.5828; //35; //37.836; //33.76; //38.3676; //37.1271; //31.1093;
     public final static double highRung2_First = 156.39; //157.39;
     public final static double wall2 = 156.4382; //157.9896;// 154.8883; //157.0149; //154.8883; //156.749
@@ -51,19 +51,20 @@ public class Subsystem_Constants {
     public final static double openMore = 0.4;
     public final static double openLess = 0.7;
 
+    public final static double intake_AngleOffset = 0.04;
     public final static double intake_AngleScale0 = 0;
     public final static double intake_AngleScale1 = 1;
-    public final static double intake_AngleFloor = 0.29; //0.32; //0.26;
-    public final static double intake_AngleFloor_teleop = 0.34; //0.32; //0.26;
-    public final static double intake_AngleBasket = 0.38; //0.41; //0.36;
-    public final static double intake_AngleBasket_teleop = 0.38; //0.41; //intake_AngleFloor; //0.45, 0.35
-    public final static double intake_AngleRung = 0.27; //0.3; //0.27; //0.2;
-    public final static double intake_AngleRung_First = 0.42; //0.41; //0.44;
-    public final static double intake_AngleRung_Second = 0.24;
-    public final static double intake_AngleStart = 0.77; //0.8;
-    public final static double intake_AngleWall = 0;
-    public final static double intake_AngleWall_First = 0.1494; //0.1794;
-    public final static double intake_AngleVertical = 0.62; //0.65; //0.7; //0.65;
+    public final static double intake_AngleFloor = 0.29 + intake_AngleOffset; //0.32; //0.26;
+    public final static double intake_AngleFloor_teleop = 0.34 + intake_AngleOffset; //0.32; //0.26;
+    public final static double intake_AngleBasket = 0.37 + intake_AngleOffset; //0.38; //0.41; //0.36;
+    public final static double intake_AngleBasket_teleop = 0.37 + intake_AngleOffset; //0.38; //0.41; //intake_AngleFloor; //0.45, 0.35
+    public final static double intake_AngleRung = 0.26 + intake_AngleOffset; //0.27; //0.3; //0.27; //0.2;
+    public final static double intake_AngleRung_First = 0.40 + intake_AngleOffset; //0.42; //0.41; //0.44;
+    public final static double intake_AngleRung_Second = 0.24 + intake_AngleOffset;
+    public final static double intake_AngleStart = 0.76 + intake_AngleOffset; //0.77; //0.8;
+    public final static double intake_AngleWall = 0 + intake_AngleOffset;
+    public final static double intake_AngleWall_First = 0.1494 + intake_AngleOffset; //0.1794;
+    public final static double intake_AngleVertical = 0.62 + intake_AngleOffset; //0.65; //0.7; //0.65;
 
     public final static double claw_AngleScale0 = 0;
     public final static double claw_AngleScale1 = 0.7;
