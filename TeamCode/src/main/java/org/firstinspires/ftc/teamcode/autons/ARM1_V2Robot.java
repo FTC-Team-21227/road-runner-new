@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.autons;
 
+// Importing stuff for hardware, controls, annotations
 import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
@@ -9,26 +10,31 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+// Our controls and constants files
 import org.firstinspires.ftc.teamcode.Subsystem_Constants;
 import org.firstinspires.ftc.teamcode.TunePID;
 import org.firstinspires.ftc.teamcode.TunePID_MotionProfile;
 
 public class ARM1_V2Robot {
     private DcMotor arm1;
-    //PID controllers for ARM1 and ARM2
-    private PIDController controller1;
-    //PIDF gains
+    private PIDController controller1; // PID controllers for ARM1
+
+    // PIDF gains, imported from a tuning file
     double p1 = TunePID.p1, i1 = TunePID.i1, d1 = TunePID.d1;
     double f1 = TunePID.f1;
-    //ticks to degrees conversion
+
+    // Conversion factor from degree to encoder ticks
     private final double ticks_in_degree_1 = TunePID_MotionProfile.ticks_in_degree_1;
-    //length, COM, mass values for feedforward calculation
-    private final double L1 = 43.2;
-    private final double L2 = 43.2;
-    private final double x1 = 36.96;
-    private final double x2 = 26.4;
-    private final double m1 = 810;
-    private final double m2 = 99.79;
+
+    // Constants of robot for feedforward calculation
+    private final double L1 = 43.2; // Length of ARM1
+    private final double L2 = 43.2; // Length of ARM2
+    private final double x1 = 36.96; // Distance to COM of ARM1
+    private final double x2 = 26.4; // Distance to COM of ARM2
+    private final double m1 = 810; // Mass of ARM1
+    private final double m2 = 99.79; // Mass of ARM2
+
+    // Arm position constants, loaded from Subsystem_Constants
     private final double highBasket = Subsystem_Constants.highBasket1;
     private final double highRung = Subsystem_Constants.highRung1;
     private final double highRung2 = Subsystem_Constants.highRung1_2;
@@ -44,39 +50,61 @@ public class ARM1_V2Robot {
     private final double vertSub1 = Subsystem_Constants.vertSub1;
     private final double vertFloor1 = Subsystem_Constants.vertFloor1;
 
+    // Constructor to initialize motor and PID controller
     public ARM1_V2Robot(HardwareMap hardwareMap) {
-        arm1 = hardwareMap.get(DcMotor.class, "ARM1");
-        arm1.setDirection(DcMotor.Direction.REVERSE); //CHANGE BACK TO DCMOTORSIMPLE IF SOMETHING DOESN'T WORK
-        arm1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        arm1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        arm1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        controller1 = new PIDController(p1, i1, d1);
+        arm1 = hardwareMap.get(DcMotor.class, "ARM1"); // Get motor from config
+        arm1.setDirection(DcMotor.Direction.REVERSE); // Reversing direction based on hardware
+        arm1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER); // Reset encoder to 0
+        arm1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // Manual power control
+        arm1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT); // Does not brake when power = 0
+        controller1 = new PIDController(p1, i1, d1); // Init PID controller
     }
+
+    // Action that lifts the arm to specific angle using PIDF, includes waits
     public class LiftTarget implements Action {
-        ElapsedTime time = new ElapsedTime();
+        ElapsedTime time = new ElapsedTime(); // Creating time object to add waits our arm movements
         boolean start;
         double target1;
         double runTime;
+
         public LiftTarget(double pos){
             target1 = pos;
             start = false;
-            runTime = 2;
+            runTime = 2; // Default runtime
         }
+
         public LiftTarget(double pos, double runtime){
             target1 = pos;
             start = false;
             runTime = runtime;
         }
+
+        // PIDF arm control
         public double ARM_Control_PID(@NonNull TelemetryPacket packet /*NEW*/){
             double target2 = PoseStorage.target2; //NEW
             packet.addLine("target2pos1:"+target2); //NEW
             int arm1Pos = arm1.getCurrentPosition();
-            double pid1 = controller1.calculate(arm1Pos,(int)(target1*ticks_in_degree_1)); //PID calculation
-            double ff1 = (m1*Math.cos(Math.toRadians(target1))*x1 +
-            /*NEW*/        m2*Math.cos(Math.atan(((x2*Math.sin(Math.toRadians(target1+target2)))+(L1*Math.sin(Math.toRadians(target1))))/((L1*Math.cos(Math.toRadians(target1)))+(x2*Math.cos(Math.toRadians(target1+target2))))))*
-                            Math.sqrt(Math.pow((x2*Math.sin(Math.toRadians(target1+target2))+L1*Math.sin(Math.toRadians(target1))),2)+Math.pow((x2*Math.cos(Math.toRadians(target1+target2))+L1*Math.cos(Math.toRadians(target1))),2))) * f1; // feedforward calculation
-            return ((pid1+ff1));
+
+            // PID calculates correction from current position to target position
+            double pid1 = controller1.calculate(arm1Pos,(int)(target1*ticks_in_degree_1));
+
+            // Feedforward based on ARM1 angle + ARM2 mass torque
+            double ff1 = (
+                    m1 * Math.cos(Math.toRadians(target1)) * x1 +
+                            m2 * Math.cos(Math.atan(
+                                    (x2 * Math.sin(Math.toRadians(target1 + target2)) + L1 * Math.sin(Math.toRadians(target1))) /
+                                            (L1 * Math.cos(Math.toRadians(target1)) + x2 * Math.cos(Math.toRadians(target1 + target2)))
+                            )) *
+                                    Math.sqrt(
+                                            Math.pow(x2 * Math.sin(Math.toRadians(target1 + target2)) + L1 * Math.sin(Math.toRadians(target1)), 2) +
+                                                    Math.pow(x2 * Math.cos(Math.toRadians(target1 + target2)) + L1 * Math.cos(Math.toRadians(target1)), 2)
+                                    )
+            ) * f1;
+
+            return pid1 + ff1; // Total output power = PID + feedforward
         }
+
+        //Runs continuously until target is reached or timeout
         @Override
         public boolean run(@NonNull TelemetryPacket packet) {
             if (!start) {
