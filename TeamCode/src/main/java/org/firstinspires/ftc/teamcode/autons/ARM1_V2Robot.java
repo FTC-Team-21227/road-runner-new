@@ -27,11 +27,11 @@ public class ARM1_V2Robot {
     private final double ticks_in_degree_1 = TunePID_MotionProfile.ticks_in_degree_1;
 
     // Constants of robot for feedforward calculation
-    private final double L1 = 43.2; // Length of ARM1
-    private final double L2 = 43.2; // Length of ARM2
+    private final double L1 = 43.2;  // Length of ARM1
+    private final double L2 = 43.2;  // Length of ARM2
     private final double x1 = 36.96; // Distance to COM of ARM1
-    private final double x2 = 26.4; // Distance to COM of ARM2
-    private final double m1 = 810; // Mass of ARM1
+    private final double x2 = 26.4;  // Distance to COM of ARM2
+    private final double m1 = 810;   // Mass of ARM1
     private final double m2 = 99.79; // Mass of ARM2
 
     // Arm position constants, loaded from Subsystem_Constants
@@ -52,12 +52,12 @@ public class ARM1_V2Robot {
 
     // Constructor to initialize motor and PID controller
     public ARM1_V2Robot(HardwareMap hardwareMap) {
-        arm1 = hardwareMap.get(DcMotor.class, "ARM1"); // Get motor from config
-        arm1.setDirection(DcMotor.Direction.REVERSE); // Reversing direction based on hardware
-        arm1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER); // Reset encoder to 0
-        arm1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // Manual power control
+        arm1 = hardwareMap.get(DcMotor.class, "ARM1");   // Get motor from config
+        arm1.setDirection(DcMotor.Direction.REVERSE);               // Reversing direction based on hardware
+        arm1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);       // Reset encoder to 0
+        arm1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);          // Manual power control
         arm1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT); // Does not brake when power = 0
-        controller1 = new PIDController(p1, i1, d1); // Init PID controller
+        controller1 = new PIDController(p1, i1, d1);                // Init PID controller
     }
 
     // Action that lifts the arm to specific angle using PIDF, includes waits
