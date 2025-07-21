@@ -48,45 +48,69 @@ public class ExcludePipeline extends OpenCvPipeline {
     boolean chamberPos;
 
     public static boolean printStuff= false;
-    public static double RUH = 10, RLH = 150, RS = 90, RV = 200 /*175*/ /*210*/, BH = 110 /*100*/, BUH = 130 /*120*/, BS = 70, BV = 190 /*250*/ /*80*/, YH = 15 /*10*/ /*20*/ /*15*/ /*27*/, YUH = 40 /*30*/ /*40*/ /*30*/ /*33*/, YS = 80 /*150*/ /*85*/ /*80*/ /*100*/ /*80*/ /*100*/, YV = 210 /*243*/ /*250*/ /*150*/ /*100*/ /*150*/ /*51*/, AREA_RATIO_WEIGHT = -0.4, UPPIES = .5, MIN_AREA = 2500 /*7000*/;
-    public static int UPPER_THRESH = 280 /*120*/, LOWER_THRESH = 20 /*60*/, YUPPER_THRESH = 240, YLOWER_THRESH = 80, KERNEL_SIZE = 2, YELLOW_KERNEL_SIZE = 2;
-    public static double horizontal_offset, camera_tilt, forward_offset, inchPerPixel_x, inchPerPixel_y,k,MIN_DIST = 36;
+
+    // HSV thresholds
+    public static double RUH = 10, RLH = 150, RS = 90, RV = 200 /*175*/ /*210*/;
+    public static double BH = 110 /*100*/, BUH = 130 /*120*/, BS = 70, BV = 190 /*250*/ /*80*/;
+    public static double YH = 15 /*10*/ /*20*/ /*15*/ /*27*/, YUH = 40 /*30*/ /*40*/ /*30*/ /*33*/, YS = 80 /*150*/ /*85*/ /*80*/ /*100*/ /*80*/ /*100*/, YV = 210 /*243*/ /*250*/ /*150*/ /*100*/ /*150*/ /*51*/;
+    public static double AREA_RATIO_WEIGHT = -0.4, UPPIES = .5, MIN_AREA = 2500 /*7000*/;
+
+    // Canny edge detection thresholds
+    public static int UPPER_THRESH = 280 /*120*/, LOWER_THRESH = 20 /*60*/, YUPPER_THRESH = 240, YLOWER_THRESH = 80;
+    public static int KERNEL_SIZE = 2, YELLOW_KERNEL_SIZE = 2;
+
+    // Calibration and conversions
+    public static double horizontal_offset, camera_tilt, forward_offset, inchPerPixel_x, inchPerPixel_y, k, MIN_DIST = 36;
+
+    // Intermediate OpenCV Mats
     Mat hsv = new Mat();
     Mat mask = new Mat(), mask2 = new Mat(), closedEdges = new Mat(), edges = new Mat();
     Mat kernel = new Mat();
-    Mat colorMask = new Mat();
-    Mat colorMask2 = new Mat();
+    Mat colorMask = new Mat(), colorMask2 = new Mat();
 
     Mat hierarchy = new Mat();
     Mat boundingImage = new Mat(), maskedImage = new Mat();
 
+    // Aspect ratio, matching thresholds
     public static double AREA_THRESH = .6 /*.82*/, FCL = 1, UP_TOLERANCE = 0.6, DOWN_TOLERANCE = 0.8, CLASSUP_TOL = 0.5, CLASSDOWN_TOL = 0.3;
+
+    // IRL Sample measurements
     double objectWidth = 3.5;
     double objectHeight = 1.5;
 
+    // Used for process bounding rectangles
     MatOfPoint2f contour2f = new MatOfPoint2f();
     private volatile double[] center = {0, 0, 0, 0};
     Double[] camCent = {0.0 , 0.0, 0.0, 0.0};
 
-    double objX_cam = 0;
-    double objY_cam = 0;
-    double objZ_cam = 0;
-    double objX_base = 0;
-    double objY_base = 0;
-    int color = 0;
+    // Object position in camera stream, robot base coordinates
+    double objX_cam = 0, objY_cam = 0, objZ_cam = 0;
+    double objX_base = 0, objY_base = 0;
+    int color = 0; // Color mode
 
-    /*
-     * Camera Calibration Parameters
-     */
+    // Camera Calibration parameters
     Mat cameraMatrix = new Mat(3, 3, CvType.CV_64FC1);
     MatOfDouble distCoeffs = new MatOfDouble();
     RotatedRect minAreaRect;
     Telemetry telemetry;
 
 
+    // camera parameters and position stuff
     public ExcludePipeline(Telemetry telemetry, boolean chamberPos) {
-        if (chamberPos) {horizontal_offset = -9.5 /*5*/ /*-11.5*/; camera_tilt = Math.toRadians(36); forward_offset = 0; inchPerPixel_x = 17.0/640; inchPerPixel_y = 18.0/480; k = Math.log(14.0/2)/Math.log(14.17/3.68);} //30; //45; //50 /*30*/;}
-        else {horizontal_offset = 7 /*-8*/ /*5*/ /*-9.5*/; camera_tilt = Math.toRadians(0); forward_offset = -6.5 /*-2.5*/ /*-3*/; inchPerPixel_x = 10.5/640; inchPerPixel_y = 7.0/480; k=1;
+        if (chamberPos) {
+                horizontal_offset = -9.5 /*5*/ /*-11.5*/;
+                camera_tilt = Math.toRadians(36);
+                forward_offset = 0;
+                inchPerPixel_x = 17.0/640;
+                inchPerPixel_y = 18.0/480;
+                k = Math.log(14.0/2)/Math.log(14.17/3.68);} //30; //45; //50 /*30*/;}
+        else {
+            horizontal_offset = 7 /*-8*/ /*5*/ /*-9.5*/;
+            camera_tilt = Math.toRadians(0);
+            forward_offset = -6.5 /*-2.5*/ /*-3*/;
+            inchPerPixel_x = 10.5/640;
+            inchPerPixel_y = 7.0/480;
+            k=1;
         } //30; //45; //50 /*30*/;}
 //        double fx = 1647 * FCL; // Replace with your camera's focal length in pixels
 //        double fy = 1647 * FCL;
@@ -101,14 +125,17 @@ public class ExcludePipeline extends OpenCvPipeline {
         this.chamberPos = chamberPos;
     }
 
-
+    // Reset detected object's center to 0
     public void resetCenter() {
         center = new double[]{0, 0, 0, 0};
     }
 
     @Override
     public Mat processFrame(Mat input) {
+        // Convert input image to HSV colors for better color detection
         Imgproc.cvtColor(input, hsv, Imgproc.COLOR_RGB2HSV);
+
+        // HSV bounds for different colors
         Scalar rlFilt = new Scalar(RLH, RS, RV),
                 ruFilt = new Scalar(180, 255, 255),
                 rllFilt = new Scalar(0, RS, RV),
@@ -119,26 +146,29 @@ public class ExcludePipeline extends OpenCvPipeline {
                 yuFilt = new Scalar(YUH, 255, 255);
 
         input.copyTo(boundingImage);  // More memory-efficient
-        if (color == 0) {
+
+        // Color filtering based on selected color
+        if (color == 0) { // Red
             Core.inRange(hsv, rlFilt, ruFilt, mask);
             Core.inRange(hsv, rllFilt, rulFilt, mask2);
             Core.bitwise_or(mask, mask2, colorMask);
-        } else if (color == 1)
+        } else if (color == 1) // Blue
             Core.inRange(hsv, blFilt, buFilt, colorMask);
         else if(color == 2){
-            if(isBlue){
+            if (isBlue) { // blue alliance
                 Core.inRange(hsv, blFilt, buFilt, colorMask);
-            } else {
+            } else { // red alliance
                 Core.inRange(hsv, rlFilt, ruFilt, mask);
                 Core.inRange(hsv, rllFilt, rulFilt, mask2);
                 Core.bitwise_or(mask, mask2, colorMask);
             }
-            Core.inRange(hsv, ylFilt, yuFilt, colorMask2);
+            Core.inRange(hsv, ylFilt, yuFilt, colorMask2); // yellows
         }
-        else{
+        else { // Yellow
             Core.inRange(hsv, ylFilt, yuFilt, colorMask);
         }
 
+        // Apply mask to original image
         maskedImage = new Mat();
         Core.bitwise_and(input, input, maskedImage, colorMask);
         if(color==2) {
@@ -146,6 +176,7 @@ public class ExcludePipeline extends OpenCvPipeline {
         }
 
         edges = new Mat();
+
         // Apply Canny edge detection
         if (color != 2) {
             Imgproc.Canny(maskedImage, edges, LOWER_THRESH, UPPER_THRESH);
@@ -164,9 +195,12 @@ public class ExcludePipeline extends OpenCvPipeline {
 
         }
 
+        // Find contours
         contours = new ArrayList<>();
         Imgproc.findContours(closedEdges, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
         ArrayList<Double[]> colorCoords = contoursToCoords();
+
+        // If contours found, determine best one and get coordinates
         if (!contours.isEmpty()) {
             Double[] centerd = matchedCoords(colorCoords, colorCoords);
             if (centerd[0] != 100) center = convertToDoubleArray(centerd);
@@ -180,8 +214,11 @@ public class ExcludePipeline extends OpenCvPipeline {
         else if (printStuff){
             telemetry.addLine("contours are empty!!");
         }
+
         if (printStuff) telemetry.update();
-        // Replace the final return section with:
+
+
+        // Replace the final return section with which mat:
         Mat result;
         if(printStuff) {
             if (retVal == 0) {
@@ -197,7 +234,7 @@ public class ExcludePipeline extends OpenCvPipeline {
             result = input;
         }
 
-// Only release Mats not being returned
+        // Only release Mats not being returned to save memory
         if (result != closedEdges) closedEdges.release();
         if (result != edges) edges.release();
         if (result != maskedImage) maskedImage.release();
@@ -212,20 +249,22 @@ public class ExcludePipeline extends OpenCvPipeline {
         return result;
     }
 
+    // Convert Double[] to double[] to store object center coordinates
     double[] convertToDoubleArray(Double[] wrapperArray) {
         double[] primitiveArray = new double[wrapperArray.length];
 
         for (int i = 0; i < wrapperArray.length; i++) {
             primitiveArray[i] = wrapperArray[i]; // Auto-unboxing
         }
-
         return primitiveArray;
     }
 
+    // Setter for center
     public synchronized void setCenter(double[] newCenter) {
         center = newCenter;
     }
 
+    // Getter for center (adds values to dashboard packet if printStuff enabled)
     public synchronized double[] getCenter(@NonNull TelemetryPacket packet) {
         if (printStuff){
         packet.put("objX_cam", objX_cam);
@@ -236,7 +275,8 @@ public class ExcludePipeline extends OpenCvPipeline {
         packet.put("CAM Z", camCent[2]);
         packet.put("angle", camCent[3]);
         packet.put("objX_base", objX_base);
-        packet.put("objY_base", objY_base);}
+        packet.put("objY_base", objY_base);
+        }
         return center;
     }
     public Double[] matchedCoords(ArrayList<Double[]> colorCoords, ArrayList<Double[]> allCoords) {

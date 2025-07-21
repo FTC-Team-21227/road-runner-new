@@ -64,16 +64,19 @@ public class AUTON2025REDRIGHT_V4Robot_8 extends LinearOpMode {
         boolean right_stick_button = false;
         boolean start= false;
         boolean LS = false;
+
+        // Inputting x-position of submersible sample
         while (cont && !isStopRequested()){
             if (gamepad1.a && !a){
-                if (decimal){
+                if (decimal){ // add 0.1 if decimal mode active
                     X += 0.1;
                 }
-                else {
+                else { // otherwise, X * 10 + 1
                     X = 10 * X + 1;
                 }
             }
-            a = gamepad1.a;
+            a = gamepad1.a; // update button state to get more input
+
             if (gamepad1.b && !b){
                 if (decimal){
                     X += 0.2;
@@ -137,26 +140,28 @@ public class AUTON2025REDRIGHT_V4Robot_8 extends LinearOpMode {
                 else {X = 10*X+0;}
             }
             LB = gamepad1.left_bumper;
+
             if (gamepad1.left_stick_button && !LS){
-                X *= -1;
+                X *= -1; // make X negative
             }
             LS = gamepad1.left_stick_button;
             if (gamepad1.back && !back){
-                decimal = true;
+                decimal = true; // Turn on decimal mode
             }
             back = gamepad1.back;
             if (gamepad1.right_stick_button && !right_stick_button){
-                X = 0;
-                decimal = false;
+                X = 0;           // Reset input
+                decimal = false; // Turn off decimal mode
             }
             right_stick_button = gamepad1.right_stick_button;
-            if (gamepad1.start && !start){
-                if (X!=0)pose_X = X;
-                cont = false;
+            if (gamepad1.start && !start){ // Click start to save X position
+                if (X!=0) pose_X = X; // Save X to pose_X
+                cont = false; // Exit input loop
             }
+
             start = gamepad1.start;
-            telemetry.addData("Pose_X ",pose_X);
-            telemetry.addData("Pos X ",X);
+            telemetry.addData("Pose_X ", pose_X);
+            telemetry.addData("Pos X ", X);
             telemetry.addLine("Note: x < 5 will make it go left" );
             if (decimal){
                 telemetry.addData("In decimal mode ", "only 1 decimal place permitted");
@@ -164,6 +169,9 @@ public class AUTON2025REDRIGHT_V4Robot_8 extends LinearOpMode {
             telemetry.addLine("a=1, b=2, x=3, y=4, up=5, down=6, left=7, right=8, RB=9, LB=0, back=decimal, Left Stick Button = negative,  start = continue, Right Stick Button = erase");
             telemetry.update();
         }
+
+
+        // Inputting y-position of submersible sample
         double pose_Y = 3;
         double Y = 0;
         cont = true;
@@ -268,14 +276,14 @@ public class AUTON2025REDRIGHT_V4Robot_8 extends LinearOpMode {
             telemetry.update();
         }
 
-        telemetry.addData("Pos X ",pose_X);
-        telemetry.addData("Pos Y ",pose_Y);
+        telemetry.addData("Pos X ", pose_X);
+        telemetry.addData("Pos Y ", pose_Y);
         telemetry.addLine("If incorrect, stop and reinit");
         telemetry.update();
-        PoseStorage.grabColorPose = new Pose2d(pose_X,-47+pose_Y,Math.toRadians(90));
+        PoseStorage.grabColorPose = new Pose2d(pose_X,-47 + pose_Y, Math.toRadians(90));
 
         Vector2d firstPlace = new Vector2d(10.5,firstSpecDistance);
-        if (pose_X < 5.0) firstPlace = new Vector2d(0.0, firstSpecDistance+4);
+        if (pose_X < 5.0) firstPlace = new Vector2d(0.0, firstSpecDistance + 4);
         TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose) //first specimen
 //                .setTangent(Math.toRadians(90))
                 .waitSeconds(0.4)
