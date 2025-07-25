@@ -6,13 +6,13 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.teamcode.vision.YellowPipeline;
+import org.firstinspires.ftc.teamcode.vision.ExcludePipeline;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvWebcam;
 
-//@Autonomous(name = "AutonVisionTesting")
+@Autonomous(name = "AutonVisionTesting")
 public class AutonVisionTesting extends LinearOpMode {
 //  VisionPortal myVisionPortal = VisionPortal.easyCreateWithDefaults(hardwareMap.get(WebcamName.class, "/Users/gracesong/Downloads/IMG_4852.png"), );
 
@@ -22,11 +22,9 @@ public class AutonVisionTesting extends LinearOpMode {
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
 
         OpenCvWebcam camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam1"), cameraMonitorViewId);
-        YellowPipeline yellowPipeline = new YellowPipeline(telemetry);
+        ExcludePipeline excludePipeline = new ExcludePipeline(telemetry);
 
-        camera.setPipeline(yellowPipeline);
-        telemetry.addLine("everything working so far... :(");
-        RobotLog.dd("everything working so far","ue");
+        camera.setPipeline(excludePipeline);
         camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
         {
             @Override

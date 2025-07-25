@@ -53,7 +53,9 @@ public class PipeCamera {
 
         camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam1"), cameraMonitorViewId);
         this.chamberPos = chamberPos;
-        exclude = new ExcludePipeline(telemetry,chamberPos);
+        exclude = new ExcludePipeline(telemetry, chamberPos);
+
+        // SETTING EXCLUDE PIPELINE COLOR
         if (inclYellow && color.equals("yellow")) {
             swapInt(3);
         }
@@ -96,7 +98,7 @@ public class PipeCamera {
     }
     public int getCurrent(){
         return exclude.getColor();
-    }
+    } // Get current color
     public void swapInt(int swap){
         exclude.setColor(swap);
     }
@@ -106,8 +108,9 @@ public class PipeCamera {
         exclude.setColor(newy);
     }
     public double getLatency(){
-        return .001*camera.getTotalFrameTimeMs();
+        return .001 * camera.getTotalFrameTimeMs();
     }
+
     public void swapRed(){
         exclude.setColor(0);
     }
@@ -128,7 +131,8 @@ public class PipeCamera {
         ExcludePipeline.isBlue = true;
         exclude.setColor(2);
     }
-    public void off(){
+
+    public void off() { // TURN CAMERA OFF
         camera.closeCameraDeviceAsync(() -> {
 //                    camera.stopRecordingPipeline();
         });
@@ -159,9 +163,9 @@ public class PipeCamera {
                     resetCenter();
 //
                     if (printStuff) {
-                        packet.put("relCent0", relCent[0]+"");
-                        packet.put("relCent1", relCent[1]+"");
-                        packet.put("angle", relCent[3]+"");
+                        packet.put("relCent0", relCent[0] + "");
+                        packet.put("relCent1", relCent[1] + "");
+                        packet.put("angle", relCent[3] + "");
                         RobotLog.dd("relCent0", relCent[0] + "");
                         RobotLog.dd("relCent1", relCent[1] + "");
                         RobotLog.dd("angle", relCent[3] + "");

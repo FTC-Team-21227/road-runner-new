@@ -42,6 +42,8 @@ public class PipeCamera_Deubg {
         camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam1"), cameraMonitorViewId);
         this.chamberPos = chamberPos;
         exclude = new ExcludePipeline(telemetry,chamberPos);
+
+        // SETTING EXCLUDE PIPELINE COLOR
         if (inclYellow && color.equals("yellow")) {
             swapInt(3);
         }
@@ -157,7 +159,7 @@ public class PipeCamera_Deubg {
 //
                     if (chamberPos) {
                         double x = 10.5; //PoseStorage.grabColorPose.position.x;
-                        if (PoseStorage.grabColorPose.position.x < 5.5) x = 0;
+                        if (PoseStorage.grabColorPose.position.x < 5.5) {x = 0;}
                         double y = -45; //PoseStorage.grabColorPose.position.y;
                         PoseStorage.grabColorPose = new Pose2d(x + relCent[0], y + relCent[1], Math.toRadians(90));
                     }

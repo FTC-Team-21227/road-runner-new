@@ -5,6 +5,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.cos;
 import static java.lang.Math.min;
 import static java.lang.Math.pow;
+import static java.lang.Math.round;
 import static java.lang.Math.sin;
 import static java.lang.Math.sqrt;
 
@@ -42,20 +43,24 @@ import java.util.List;
 
 @Config
 public class ExcludePipeline extends OpenCvPipeline {
-    public static int retVal = 0;
+    public static int retVal = 0; // 0: original image, 1: binary image, 2: edges
     public static boolean isBlue = true;
     List<MatOfPoint> contours = new ArrayList<>();
     boolean chamberPos;
 
-    public static boolean printStuff= false;
+    public static boolean printStuff= false; // Telemetry and outputting intermediate mats
 
+    // THRESHOLDS
     // HSV thresholds
-    public static double RUH = 10, RLH = 150, RS = 90, RV = 200 /*175*/ /*210*/;
-    public static double BH = 110 /*100*/, BUH = 130 /*120*/, BS = 70, BV = 190 /*250*/ /*80*/;
-    public static double YH = 15 /*10*/ /*20*/ /*15*/ /*27*/, YUH = 40 /*30*/ /*40*/ /*30*/ /*33*/, YS = 80 /*150*/ /*85*/ /*80*/ /*100*/ /*80*/ /*100*/, YV = 210 /*243*/ /*250*/ /*150*/ /*100*/ /*150*/ /*51*/;
+    public static double RUH = 10, RLH = 130, RS = 90, RV = 180; // upper and lower H, S, and V
+    public static double BH = 110, BUH = 130, BS = 70, BV = 190;
+    public static double YH = 15, YUH = 40, YS = 80, YV = 210;
     public static double AREA_RATIO_WEIGHT = -0.4, UPPIES = .5, MIN_AREA = 2500 /*7000*/;
-
-    // Canny edge detection thresholds
+    /* Canny edge detection thresholds
+     * Strong edges when intensity > UPPER_THRESH (definite edges)
+     * Weak edges when LOWER_THRESH < intensity < UPPER_THRESH (edge candidates)
+     * Weak edges included when connected to strong edge; all others discarded
+     */
     public static int UPPER_THRESH = 280 /*120*/, LOWER_THRESH = 20 /*60*/, YUPPER_THRESH = 240, YLOWER_THRESH = 80;
     public static int KERNEL_SIZE = 2, YELLOW_KERNEL_SIZE = 2;
 
@@ -83,19 +88,18 @@ public class ExcludePipeline extends OpenCvPipeline {
     private volatile double[] center = {0, 0, 0, 0};
     Double[] camCent = {0.0 , 0.0, 0.0, 0.0};
 
-    // Object position in camera stream, robot base coordinates
+    // Object position in camera stream
     double objX_cam = 0, objY_cam = 0, objZ_cam = 0;
     double objX_base = 0, objY_base = 0;
-    int color = 0; // Color mode
+    int color = 0; // Color mode: 0 is red, 1 is blue, 2 is red/blue + yellow depending on isBlue bool
 
-    // Camera Calibration parameters
     Mat cameraMatrix = new Mat(3, 3, CvType.CV_64FC1);
     MatOfDouble distCoeffs = new MatOfDouble();
     RotatedRect minAreaRect;
     Telemetry telemetry;
 
 
-    // camera parameters and position stuff
+    // CAMERA CALIBRATION
     public ExcludePipeline(Telemetry telemetry, boolean chamberPos) {
         if (chamberPos) {
                 horizontal_offset = -9.5 /*5*/ /*-11.5*/;
@@ -130,14 +134,20 @@ public class ExcludePipeline extends OpenCvPipeline {
         center = new double[]{0, 0, 0, 0};
     }
 
+    public ExcludePipeline(Telemetry telemetry)
+    {
+        this.telemetry = telemetry;
+    }
+
+    // FRAME PROCESSING
     @Override
     public Mat processFrame(Mat input) {
         // Convert input image to HSV colors for better color detection
         Imgproc.cvtColor(input, hsv, Imgproc.COLOR_RGB2HSV);
 
-        // HSV bounds for different colors
-        Scalar rlFilt = new Scalar(RLH, RS, RV),
-                ruFilt = new Scalar(180, 255, 255),
+        // FILTERS FOR COLORS (SCALARS)
+        Scalar rlFilt = new Scalar(RLH, RS, RV),    // red lower filter
+                ruFilt = new Scalar(180, 255, 255), // red upper filter
                 rllFilt = new Scalar(0, RS, RV),
                 rulFilt = new Scalar(RUH, 255, 255),
                 blFilt = new Scalar(BH, BS, BV),
@@ -145,96 +155,92 @@ public class ExcludePipeline extends OpenCvPipeline {
                 ylFilt = new Scalar(YH, YS, YV),
                 yuFilt = new Scalar(YUH, 255, 255);
 
-        input.copyTo(boundingImage);  // More memory-efficient
+        input.copyTo(boundingImage);
 
-        // Color filtering based on selected color
+        // CREATING MASKS BASED ON COLOR
         if (color == 0) { // Red
             Core.inRange(hsv, rlFilt, ruFilt, mask);
             Core.inRange(hsv, rllFilt, rulFilt, mask2);
-            Core.bitwise_or(mask, mask2, colorMask);
-        } else if (color == 1) // Blue
+            Core.bitwise_or(mask, mask2, colorMask); // Combines both masks
+        }
+        else if (color == 1) { // Blue
             Core.inRange(hsv, blFilt, buFilt, colorMask);
-        else if(color == 2){
-            if (isBlue) { // blue alliance
+        }
+        else if(color == 2) { // Red/Blue + Yellow
+            if (isBlue) { // Blue alliance
                 Core.inRange(hsv, blFilt, buFilt, colorMask);
-            } else { // red alliance
+            }
+            else { // Red alliance
                 Core.inRange(hsv, rlFilt, ruFilt, mask);
                 Core.inRange(hsv, rllFilt, rulFilt, mask2);
                 Core.bitwise_or(mask, mask2, colorMask);
             }
-            Core.inRange(hsv, ylFilt, yuFilt, colorMask2); // yellows
+            Core.inRange(hsv, ylFilt, yuFilt, colorMask2); // Adding yellows
         }
-        else { // Yellow
+        else { // Just yellow
             Core.inRange(hsv, ylFilt, yuFilt, colorMask);
         }
 
-        // Apply mask to original image
+
+        // INPUT MAT WITH A MASK
         maskedImage = new Mat();
-        Core.bitwise_and(input, input, maskedImage, colorMask);
-        if(color==2) {
+        Core.bitwise_and(input, input, maskedImage, colorMask); // Store masked image into maskedImage mat
+        if (color == 2) { // Red/Blue + Yellow
             Core.bitwise_and(input, input, maskedImage, colorMask2);
         }
 
         edges = new Mat();
 
-        // Apply Canny edge detection
-        if (color != 2) {
-            Imgproc.Canny(maskedImage, edges, LOWER_THRESH, UPPER_THRESH);
-            kernel = Imgproc.getStructuringElement(Imgproc.MORPH_DILATE, new Size(KERNEL_SIZE, KERNEL_SIZE));
-            closedEdges = new Mat();
-            Imgproc.dilate(edges, closedEdges, kernel);
-            kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(KERNEL_SIZE, KERNEL_SIZE));
-            Imgproc.morphologyEx(closedEdges, edges, Imgproc.MORPH_CLOSE, kernel);
-        } else {
+        // EDGE DETECTION
+        if (color != 2) { // Red/Blue
+            Imgproc.Canny(maskedImage, edges, LOWER_THRESH, UPPER_THRESH);                                      // Canny edge detection (edge = black, non-edge = white)
+            kernel = Imgproc.getStructuringElement(Imgproc.MORPH_DILATE, new Size(KERNEL_SIZE, KERNEL_SIZE));   // Kernel: Dilation to expand white areas
+            closedEdges = new Mat();                                                                            // Mat to store dilated result with closed edges
+            Imgproc.dilate(edges, closedEdges, kernel);                                                         // Dilate the mat using kernel
+            kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(KERNEL_SIZE, KERNEL_SIZE));     // Kernel: Rectangular closing edges
+            Imgproc.morphologyEx(closedEdges, edges, Imgproc.MORPH_CLOSE, kernel);                              // Close the edges using kernel
+        }
+        else { // Red/Blue + Yellow
             Imgproc.Canny(maskedImage, edges, YLOWER_THRESH, YUPPER_THRESH);
             kernel = Imgproc.getStructuringElement(Imgproc.MORPH_DILATE, new Size(YELLOW_KERNEL_SIZE, YELLOW_KERNEL_SIZE));
             closedEdges = new Mat();
             Imgproc.dilate(edges, closedEdges, kernel);
             kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(YELLOW_KERNEL_SIZE, YELLOW_KERNEL_SIZE));
             Imgproc.morphologyEx(closedEdges, edges, Imgproc.MORPH_CLOSE, kernel);
-
         }
 
-        // Find contours
-        contours = new ArrayList<>();
-        Imgproc.findContours(closedEdges, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
-        ArrayList<Double[]> colorCoords = contoursToCoords();
+        // FIND CONTOURS
+        contours = new ArrayList<>(); // List to store contours; each contour is a MatOfPoint representing boundary of a closed shape
+        Imgproc.findContours(closedEdges, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE); // (binary image, contour list, parent/child nested, get all contours/no nesting, simplify lines)
+        ArrayList<Double[]> colorCoords = contoursToCoords(); // ArrayList of all center coordinates
 
-        // If contours found, determine best one and get coordinates
+        // FINDING BEST CENTER'S COORDINATES AND TELEMETRY LINES
         if (!contours.isEmpty()) {
-            Double[] centerd = matchedCoords(colorCoords, colorCoords);
-            if (centerd[0] != 100) center = convertToDoubleArray(centerd);
-            if (printStuff){
-            telemetry.addLine("we have" + contours.size() + " contours :))");
-            // After setting center
-            telemetry.addData("Valid Center", center[0] != 0);
-            telemetry.addData("Contour Count", contours.size());
-            telemetry.addData("ColorCoords Count", colorCoords.size());}
+            Double[] centerd = matchedCoords(colorCoords, colorCoords);                // Coordinates of center of best contour
+            if (centerd[0] != 100) center = convertToDoubleArray(centerd);             // If center is found, convert Double[] to double[]
+            if (printStuff) {
+            telemetry.addData("Valid Center", center[0] != 0);          // If center is valid
+            telemetry.addData("Contour Count", contours.size());              // Count of contours found
+            telemetry.addData("ColorCoords Count", colorCoords.size());}      // Count of ColorCoords
         }
         else if (printStuff){
-            telemetry.addLine("contours are empty!!");
+            telemetry.addLine("Contours are empty!!");
         }
 
         if (printStuff) telemetry.update();
 
 
-        // Replace the final return section with which mat:
+        // MAT OUTPUT:
         Mat result;
         if(printStuff) {
-            if (retVal == 0) {
-                result = boundingImage;
-            } else if (retVal == 1) {
-                result = maskedImage;
-            } else if (retVal == 2) {
-                result = edges;
-            } else {
-                result = closedEdges;
-            }
-        } else {
-            result = input;
+            if (retVal == 0) {result = boundingImage;}
+            else if (retVal == 1) {result = maskedImage;}
+            else if (retVal == 2) {result = edges;}
+            else {result = closedEdges;}
         }
+        else {result = input;}
 
-        // Only release Mats not being returned to save memory
+        // RELEASE UNUSED MATS
         if (result != closedEdges) closedEdges.release();
         if (result != edges) edges.release();
         if (result != maskedImage) maskedImage.release();
@@ -247,9 +253,10 @@ public class ExcludePipeline extends OpenCvPipeline {
         if (result != boundingImage) boundingImage.release();
 
         return result;
-    }
+    } // END OF FRAME PROCESSING
 
-    // Convert Double[] to double[] to store object center coordinates
+
+    // Double[] to double[] (used to store center coordinates)
     double[] convertToDoubleArray(Double[] wrapperArray) {
         double[] primitiveArray = new double[wrapperArray.length];
 
@@ -259,14 +266,16 @@ public class ExcludePipeline extends OpenCvPipeline {
         return primitiveArray;
     }
 
+
     // Setter for center
     public synchronized void setCenter(double[] newCenter) {
         center = newCenter;
     }
 
+
     // Getter for center (adds values to dashboard packet if printStuff enabled)
     public synchronized double[] getCenter(@NonNull TelemetryPacket packet) {
-        if (printStuff){
+        if (printStuff) {
         packet.put("objX_cam", objX_cam);
         packet.put("objY_cam", objY_cam);
         packet.put("objZ_cam", objZ_cam);
@@ -279,93 +288,108 @@ public class ExcludePipeline extends OpenCvPipeline {
         }
         return center;
     }
+
+
+    // Camera-relative to robot-relative object position, finding closest object. Returns center coordinates (field)
     public Double[] matchedCoords(ArrayList<Double[]> colorCoords, ArrayList<Double[]> allCoords) {
         ArrayList<Double[]> matchedCenters = new ArrayList<>();
-        double minDist = MIN_DIST;
-        int coord = 0;
+        double minDist = MIN_DIST; // Start with maximum allowed distance
+        int coord = 0;             // Index of center coordinate
 
+        // Loop through each detected object center
         for (int i = 0; i < colorCoords.size(); i++) {
-            Double[] relCent = colorCoords.get(i).clone();
+            Double[] relCent = colorCoords.get(i).clone(); // Current object's camera-relative coordinates
             // Camera-relative coordinates
-            objX_cam = relCent[0];  // Right/Left in camera view
-            objY_cam = relCent[1];  // Down/Up in camera view
-            objZ_cam = relCent[2];  // Forward in camera view
-            double angle = relCent[3];
+            objX_cam = relCent[0];  // Lateral
+            objY_cam = relCent[1];  // Vertical
+            objZ_cam = relCent[2];  // Depth (forward)
+            double angle = relCent[3]; // Orientation/rotation of object
 
+            // Field-coordinate X
             if (chamberPos) {
-                if (PoseStorage.grabColorPose.position.x < 5) horizontal_offset += 6;
-                objX_base = objX_cam + horizontal_offset;
+                if (PoseStorage.grabColorPose.position.x < 5) horizontal_offset += 6; // Offset depending on current pose
+                objX_base = objX_cam + horizontal_offset; // Distance of object from base of robot
             }
             else
-                objX_base = -objX_cam + horizontal_offset;
+                objX_base = -objX_cam + horizontal_offset; // Invert
+
+            // Field-coordinate Y
             if (chamberPos)
-                objY_base = 18.0*Math.pow((-objY_cam+18.0)/18.0,k) + forward_offset;
+                objY_base = 18.0 * Math.pow((-objY_cam + 18.0) / 18.0, k) + forward_offset;
             else
-                objY_base = 7.0*Math.pow((objY_cam)/7.0,k) + forward_offset;
+                objY_base = 7.0 * Math.pow((objY_cam) / 7.0, k) + forward_offset;
+
             // Calculate distance to end effector
-            double endEffectorX = 0;
+            double endEffectorX = 0; // Fixed x-position
             double endEffectorY;
-            if (chamberPos) {
-                endEffectorY = PoseStorage.grabColorPose.position.y + 45;
-            }
-            else{
-                endEffectorY = PoseStorage.grabYellowPose.position.y - 94;
-            }
+
+            if (chamberPos) {endEffectorY = PoseStorage.grabColorPose.position.y + 45;}
+            else {endEffectorY = PoseStorage.grabYellowPose.position.y - 94;}
+
+            // Squared distance to end effector
             double dx = objX_base - endEffectorX;
             double dy = objY_base - endEffectorY;
             double dist = dx*dx + dy*dy;
 
             if (dist < minDist && angle > 50 && angle < 120) {
-                coord = i;
-                minDist = dist;
+                coord = i; // Save the index
+                minDist = dist; // Update best distance
                 // Store transformed coordinates for later use
-                relCent[0] = objX_base;
+                relCent[0] = objX_base; // Overwrite with field coordinates
                 relCent[1] = objY_base;
-                matchedCenters.add(relCent);
+                matchedCenters.add(relCent); // Save matched center
             }
         }
 
-        if (matchedCenters.isEmpty()){
-            return new Double[]{100.0, 100.0, 100.0, 100.0};}
+        if (matchedCenters.isEmpty()){ // No good centers found
+            return new Double[]{100.0, 100.0, 100.0, 100.0};} // Sentinel: "not found"
         else {
-            return matchedCenters.get(matchedCenters.size()-1);
+            return matchedCenters.get(matchedCenters.size() - 1); // Return closest (latest) match
         }
     }
 
+
+    // CREATE RECTANGLE AROUND BEST CONTOUR, RETURNS CENTER COORDINATES
     public ArrayList<Double[]> contoursToCoords() {
         ArrayList<Double[]> centers = new ArrayList<>();
-        // Set acceptable aspect ratio range
+
+        // Set acceptable aspect ratio range with tolerance
         double minAspectRatio = 3.5 / 1.5 - DOWN_TOLERANCE;
         double maxAspectRatio = 3.5 / 1.5 + UP_TOLERANCE;
+
         // Iterate over contours
         for (MatOfPoint contour : contours) {
-            // Filter out small contours based on area
-            if (Imgproc.contourArea(contour) < MIN_AREA) {
-                continue;
-            }
+            // Skip small contours
+            if (Imgproc.contourArea(contour) < MIN_AREA) {continue;}
 
-            // Approximate the contour to a polygon
+            // Convert contour points to MatOfPoint2f, get area of the contour
             contour2f = new MatOfPoint2f(contour.toArray());
-            minAreaRect = Imgproc.minAreaRect(contour2f);
+            minAreaRect = Imgproc.minAreaRect(contour2f); // Minimum area of contour rectangle
 
-            if (minAreaRect.size.width != 0 && minAreaRect.size.height != 0 && Imgproc.contourArea(contour) / (minAreaRect.size.height * minAreaRect.size.width) > AREA_THRESH) {
+            if (minAreaRect.size.width != 0 && minAreaRect.size.height != 0 &&
+                    Imgproc.contourArea(contour) / (minAreaRect.size.height * minAreaRect.size.width) > AREA_THRESH) {
                 Point[] box = new Point[4];
-                minAreaRect.points(box);
-                Point[] orded = orderPoints(box);
-                if(printStuff) {
-                    for (int j = 0; j < 4; j++) {
-                        Imgproc.line(boundingImage, box[j], box[(j + 1) % 4], new Scalar(255, 0, 0), 2);
-                    }
-                }
+                minAreaRect.points(box); // Get 4 points of bounding rectangle and store in box
+                Point[] orded = orderPoints(box); // Order the points
+
+                // DELETE THIS BOUNDIGN BOX CODE? REPEATED
+//                if(printStuff) { // Draw red bounding box
+//                    for (int j = 0; j < 4; j++) {
+//                        Imgproc.line(boundingImage, box[j], box[(j + 1) % 4], new Scalar(255, 0, 0), 2);
+//                    }
+//                }
+
+                // Calculate distances between corner points to get width and height
                 double[] distances = {distance(orded[0], orded[1]), distance(orded[1], orded[2]), distance(orded[0], orded[2])};
                 Arrays.sort(distances);
                 double width = distances[1];
                 double height = distances[0];
+
                 if (height != 0) {  // Avoid division by zero
                     double aspectRatio = width / height;
 //                  if (minAspectRatio <= aspectRatio && aspectRatio <= maxAspectRatio) {
-                        // Draw the bounding rectangle on the image
 
+                    // Get angle of rotation of rectangle
                     double rotRectAngle = minAreaRect.angle;
                     if (minAreaRect.size.width < minAreaRect.size.height) {
                         rotRectAngle += 90;
@@ -374,25 +398,37 @@ public class ExcludePipeline extends OpenCvPipeline {
                     // Compute the angle and store it
                     double angle = (rotRectAngle);
 
+                    // Draw blue bounding box
                     if(printStuff) {
                         for (int j = 0; j < 4; j++) {
                             Imgproc.line(boundingImage, box[j], box[(j + 1) % 4], new Scalar(0, 0, 255), 2);
                         }
                     }
+
+                    // Calculate centroid of rectangle, convert to inches
                     double[] coords = new double[3];
-                    coords[0] = (orded[0].x+orded[1].x+orded[2].x+orded[3].x)/4.0 * inchPerPixel_x;
-                    coords[1] = (orded[0].y+orded[1].y+orded[2].y+orded[3].y)/4.0 * inchPerPixel_y;
+                    coords[0] = (orded[0].x + orded[1].x + orded[2].x + orded[3].x) / 4.0 * inchPerPixel_x;
+                    coords[1] = (orded[0].y + orded[1].y + orded[2].y + orded[3].y) / 4.0 * inchPerPixel_y;
                     coords[2] = (1000);
 
-                    camCent = new Double[]{coords[0],  // Raw camera-relative X
+                    // Display on screen
+                    if(printStuff) {
+                        String label = "(" + round(coords[0]*100) + ", " + round(coords[1]*100) + ")";
+                        Imgproc.putText(boundingImage, label, new Point(coords[0] + 10, coords[1] + 60), Imgproc.FONT_HERSHEY_SIMPLEX, 0.5, new Scalar(0, 255, 0), 2);
+                    }
+
+                    // STORE CAMERA-RELATIVE COORDINATES + ANGLE IN AN ARRAY; we'll transform in matchedCoords
+                    camCent = new Double[]{
+                            coords[0],  // Raw camera-relative X
                             coords[1],  // Raw camera-relative Y
                             coords[2],  // Raw camera-relative Z
                             angle};       // Detection angle
-// Store raw coordinates - we'll transform in matchedCoords
+                    // Add the data to centers list
                     centers.add(camCent);
                 }
             }
         }
+        // Return list of detected centers and angles
         return centers;
     }
 
@@ -401,7 +437,7 @@ public class ExcludePipeline extends OpenCvPipeline {
         return Math.sqrt(pow(p2.x - p1.x, 2) + pow(p2.y - p1.y, 2));
     }
 
-
+    // ORDERING POINTS
     public static Point[] orderPoints(Point[] pts) {
         if (pts.length != 4) {
             throw new IllegalArgumentException("Exactly four points are required.");
@@ -448,7 +484,6 @@ public class ExcludePipeline extends OpenCvPipeline {
         return orderedPts;
     }
 
-
     public static boolean isCC(Point p1, Point p2, Point p3, Point p4) {
         return isCCW(p1, p2, p3) && isCCW(p1, p3, p4) &&
                 isCCW(p2, p3, p4) && isCCW(p1, p2, p4);
@@ -460,8 +495,9 @@ public class ExcludePipeline extends OpenCvPipeline {
         return crossProduct > 0; // Returns true if the points are in counter-clockwise order
     }
 
+    // DISPLAYING INFO ON IMAGE
     static void drawTagText(RotatedRect rect, String text, Mat mat, String color) {
-        Scalar colorScalar = getColorScalar(color);
+        Scalar colorScalar = getColorScalar(color); // Font color
 
         Imgproc.putText(
                 mat, // The buffer we're drawing on
@@ -470,12 +506,12 @@ public class ExcludePipeline extends OpenCvPipeline {
                         rect.center.x - 50,  // x anchor point
                         rect.center.y + 25), // y anchor point
                 Imgproc.FONT_HERSHEY_PLAIN, // Font
-                1, // Font size
-                colorScalar, // Font color
-                1); // Font thickness
+                1,                          // Font size
+                colorScalar,                // Font color
+                1);                         // Font thickness
     }
 
-
+    // Font color for drawTagText()
     static Scalar getColorScalar(String color) {
         switch (color) {
             case "Blue":
