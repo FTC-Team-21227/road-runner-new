@@ -21,7 +21,7 @@ import org.openftc.easyopencv.OpenCvWebcam;
 
 import java.util.Arrays;
 
-public class PipeCamera_Deubg {
+public class PipeCamera_Debug {
     /*
      * EDIT THESE PARAMETERS AS NEEDED
      */
@@ -36,7 +36,7 @@ public class PipeCamera_Deubg {
     ExcludePipeline exclude;
 //    FtcDashboard dashboard;
 
-    public PipeCamera_Deubg(HardwareMap hardwareMap, Telemetry telemetry, boolean chamberPos, String color, boolean inclYellow) {
+    public PipeCamera_Debug(HardwareMap hardwareMap, Telemetry telemetry, boolean chamberPos, String color, boolean inclYellow) {
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
 
         camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam1"), cameraMonitorViewId);

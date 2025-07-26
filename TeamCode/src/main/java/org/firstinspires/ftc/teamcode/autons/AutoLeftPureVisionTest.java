@@ -8,8 +8,6 @@ import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-import org.firstinspires.ftc.teamcode.MecanumDrive;
-
 @Config
 @Autonomous(name = "SUPERCVTest_Left")
 public class AutoLeftPureVisionTest extends LinearOpMode {
@@ -18,7 +16,7 @@ public class AutoLeftPureVisionTest extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         Pose2d initialPose = new Pose2d(10.5, -51, Math.toRadians(90));
-        PipeCamera_Deubg cam = new PipeCamera_Deubg(hardwareMap,telemetry, false,color, inclYellow);
+        PipeCamera_Debug cam = new PipeCamera_Debug(hardwareMap,telemetry, false,color, inclYellow);
 
         ARM1_V3Robot arm1 = new ARM1_V3Robot(hardwareMap);
 

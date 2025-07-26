@@ -43,6 +43,8 @@ import java.util.List;
 
 @Config
 public class ExcludePipeline extends OpenCvPipeline {
+    private final TelemetryPacket packet = new TelemetryPacket();
+
     public static int retVal = 0; // 0: original image, 1: binary image, 2: edges
     public static boolean isBlue = true;
     List<MatOfPoint> contours = new ArrayList<>();
@@ -116,15 +118,20 @@ public class ExcludePipeline extends OpenCvPipeline {
             inchPerPixel_y = 7.0/480;
             k=1;
         } //30; //45; //50 /*30*/;}
-//        double fx = 1647 * FCL; // Replace with your camera's focal length in pixels
-//        double fy = 1647 * FCL;
-//        double cx = 746; // Replace with your camera's principal point x-coordinate (usually image width / 2)
-//        double cy = 439; // Replace with your camera's principal point y-coordinate (usually image height / 2)
-//        cameraMatrix.put(0, 0,
-//                fx, 0, cx,
-//                0, fy, cy,
-//                0, 0, 1);
-//        distCoeffs = new MatOfDouble(0.08642896,  0.58342025,  0.00830023,  0.00885814, -3.45247042);
+
+
+        // SOLVE PNP CONSTANTS
+        double fx = 687.0474084; // 1647 * FCL; // Replace with your camera's focal length in pixels
+        double fy = 776.10985146; // 1647 * FCL;
+        double cx = 313.41761614;; // 746; // Replace with your camera's principal point x-coordinate (usually image width / 2)
+        double cy = 198.62504504; // 439; // Replace with your camera's principal point y-coordinate (usually image height / 2)
+        cameraMatrix.put(0, 0,
+                fx, 0, cx,
+                0, fy, cy,
+                0, 0, 1);
+        distCoeffs = new MatOfDouble(0.18911383, -0.42447552, -0.00369783, -0.0032384, -0.47152209); // new MatOfDouble(0.08642896,  0.58342025,  0.00830023,  0.00885814, -3.45247042);
+
+
         this.telemetry = telemetry;
         this.chamberPos = chamberPos;
     }
@@ -300,10 +307,10 @@ public class ExcludePipeline extends OpenCvPipeline {
         for (int i = 0; i < colorCoords.size(); i++) {
             Double[] relCent = colorCoords.get(i).clone(); // Current object's camera-relative coordinates
             // Camera-relative coordinates
-            objX_cam = relCent[0];  // Lateral
-            objY_cam = relCent[1];  // Vertical
-            objZ_cam = relCent[2];  // Depth (forward)
-            double angle = relCent[3]; // Orientation/rotation of object
+            objX_cam = relCent[0];      // Lateral
+            objY_cam = relCent[1];      // Vertical
+            objZ_cam = relCent[2];      // Depth (forward)
+            double angle = relCent[3];  // Orientation/rotation of object
 
             // Field-coordinate X
             if (chamberPos) {
@@ -380,7 +387,11 @@ public class ExcludePipeline extends OpenCvPipeline {
 //                }
 
                 // Calculate distances between corner points to get width and height
-                double[] distances = {distance(orded[0], orded[1]), distance(orded[1], orded[2]), distance(orded[0], orded[2])};
+                double[] distances = {
+                        distance(orded[0], orded[1]),
+                        distance(orded[1], orded[2]),
+                        distance(orded[0], orded[2])
+                };
                 Arrays.sort(distances);
                 double width = distances[1];
                 double height = distances[0];
@@ -405,32 +416,71 @@ public class ExcludePipeline extends OpenCvPipeline {
                         }
                     }
 
-                    // Calculate centroid of rectangle, convert to inches
-                    double[] coords = new double[3];
-                    coords[0] = (orded[0].x + orded[1].x + orded[2].x + orded[3].x) / 4.0 * inchPerPixel_x;
-                    coords[1] = (orded[0].y + orded[1].y + orded[2].y + orded[3].y) / 4.0 * inchPerPixel_y;
-                    coords[2] = (1000);
+                    // SETTING UP SOLVEPNP
+                    // 2D image points of corners
+                    MatOfPoint2f imagePoints = new MatOfPoint2f(orded);
 
-                    // Display on screen
-                    if(printStuff) {
-                        String label = "(" + round(coords[0]*100) + ", " + round(coords[1]*100) + ")";
-                        Imgproc.putText(boundingImage, label, new Point(coords[0] + 10, coords[1] + 60), Imgproc.FONT_HERSHEY_SIMPLEX, 0.5, new Scalar(0, 255, 0), 2);
+                    MatOfPoint3f objectPoints = new MatOfPoint3f(
+                            new Point3(-objectWidth/2, -objectHeight/2, 0),
+                            new Point3(objectWidth/2, -objectHeight/2, 0),
+                            new Point3(objectWidth/2, objectHeight/2, 0),
+                            new Point3(-objectWidth/2, objectHeight/2, 0)
+                    );
+
+                    // Run solvePnP
+                    Mat rvec = new Mat(); // Rotation
+                    Mat tvec = new Mat(); // Position relative to cam
+                    boolean success = Calib3d.solvePnP(objectPoints, imagePoints, cameraMatrix, distCoeffs, rvec, tvec);
+
+
+                    if (success) {
+                        double x = tvec.get(0, 0)[0]; // lateral position relative to cam
+                        double y = tvec.get(1, 0)[0]; // vertical position relative to cam
+                        double z = tvec.get(2, 0)[0]; // depth/forward position relative to cam
+
+                        if (printStuff) {
+                            packet.put("SolvePnp","Success");
+                            packet.put("SolvePnP X", x);
+                            packet.put("SolvePnP Y", y);
+                            packet.put("SolvePnP Z", z);
+
+                        }
+
+                        // Save SolvePnP position as new coordinates
+                        camCent = new Double[]{x, y, z, angle};
+                        centers.add(camCent);
                     }
+                    else { // calculate manually
+                        // Calculate centroid of rectangle, convert to inches
+                        packet.put("Solve PnP", "Failed");
+                        double[] coords = new double[3];
+                        coords[0] = (orded[0].x + orded[1].x + orded[2].x + orded[3].x) / 4.0 * inchPerPixel_x;
+                        coords[1] = (orded[0].y + orded[1].y + orded[2].y + orded[3].y) / 4.0 * inchPerPixel_y;
+                        coords[2] = (1000);
 
-                    // STORE CAMERA-RELATIVE COORDINATES + ANGLE IN AN ARRAY; we'll transform in matchedCoords
-                    camCent = new Double[]{
-                            coords[0],  // Raw camera-relative X
-                            coords[1],  // Raw camera-relative Y
-                            coords[2],  // Raw camera-relative Z
-                            angle};       // Detection angle
-                    // Add the data to centers list
-                    centers.add(camCent);
+                        // Display on screen
+                        if(printStuff) {
+                            String distText = "center (no solvepnp)"; // depth (1000?)
+                            drawCenterWithTag(new Double[]{minAreaRect.center.x, minAreaRect.center.y}, distText, boundingImage, "red");
+                        }
+
+                        // STORE CAMERA-RELATIVE COORDINATES + ANGLE IN AN ARRAY; we'll transform in matchedCoords
+                        camCent = new Double[]{
+                                coords[0],  // Raw camera-relative X
+                                coords[1],  // Raw camera-relative Y
+                                coords[2],  // Raw camera-relative Z
+                                angle};       // Detection angle
+                        // Add the data to centers list
+                        centers.add(camCent);
+                    }
                 }
             }
         }
         // Return list of detected centers and angles
         return centers;
     }
+
+
 
 
     private static double distance(Point p1, Point p2) {
@@ -509,6 +559,24 @@ public class ExcludePipeline extends OpenCvPipeline {
                 1,                          // Font size
                 colorScalar,                // Font color
                 1);                         // Font thickness
+    }
+
+    static void drawCenterWithTag(Double[] center, String text, Mat mat, String color) {
+        Scalar colorScalar = getColorScalar(color); // Get color scalar for drawing
+        Point centerPoint = new Point(center[0], center[1]);
+        // Draw a small circle at the center point
+        Imgproc.circle(mat, centerPoint, 5, colorScalar, -1); // filled circle radius=5
+
+        // Draw the tag text slightly offset from center point
+        Imgproc.putText(
+                mat,
+                text,
+                new Point(centerPoint.x + 10, centerPoint.y - 10), // right and slightly above the center point
+                Imgproc.FONT_HERSHEY_PLAIN,
+                1,
+                colorScalar,
+                1
+        );
     }
 
     // Font color for drawTagText()

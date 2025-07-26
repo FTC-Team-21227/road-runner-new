@@ -1,13 +1,10 @@
 package org.firstinspires.ftc.teamcode.autons;
 
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
-import com.acmerobotics.roadrunner.ProfileAccelConstraint;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
-import com.acmerobotics.roadrunner.TranslationalVelConstraint;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -21,7 +18,7 @@ public class AutoRightVisionTest extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         Pose2d initialPose = new Pose2d(10.5, -63.3, Math.toRadians(90));
         MecanumDrive drive = new MecanumDrive(hardwareMap, initialPose);
-        PipeCamera_Deubg cam = new PipeCamera_Deubg(hardwareMap,telemetry,true,"yellow", true);
+        PipeCamera_Debug cam = new PipeCamera_Debug(hardwareMap,telemetry,true,"yellow", true);
 
         ARM1_V3Robot arm1 = new ARM1_V3Robot(hardwareMap);
         ARM2_V3Robot arm2 = new ARM2_V3Robot(hardwareMap);

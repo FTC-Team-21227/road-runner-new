@@ -1,20 +1,12 @@
 package org.firstinspires.ftc.teamcode.autons;
 
 import com.acmerobotics.dashboard.config.Config;
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
-import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.ParallelAction;
-import com.acmerobotics.roadrunner.Pose2d;
-import com.acmerobotics.roadrunner.ProfileAccelConstraint;
 import com.acmerobotics.roadrunner.SequentialAction;
-import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
-import com.acmerobotics.roadrunner.TranslationalVelConstraint;
-import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-import org.firstinspires.ftc.teamcode.MecanumDrive;
 @Config
 @Autonomous(name = "SUPERCVTest_Right")
 public class AutoRightPureVisionTest extends LinearOpMode {
@@ -22,7 +14,7 @@ public class AutoRightPureVisionTest extends LinearOpMode {
     public static boolean inclYellow = false;
     @Override
     public void runOpMode() throws InterruptedException {
-        PipeCamera_Deubg cam = new PipeCamera_Deubg(hardwareMap,telemetry, true, color, inclYellow);
+        PipeCamera_Debug cam = new PipeCamera_Debug(hardwareMap,telemetry, true, color, inclYellow);
         ARM1_V3Robot arm1 = new ARM1_V3Robot(hardwareMap);
 
         waitForStart();
