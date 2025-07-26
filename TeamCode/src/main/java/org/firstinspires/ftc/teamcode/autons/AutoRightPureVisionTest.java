@@ -14,7 +14,7 @@ public class AutoRightPureVisionTest extends LinearOpMode {
     public static boolean inclYellow = false;
     @Override
     public void runOpMode() throws InterruptedException {
-        PipeCamera_Debug cam = new PipeCamera_Debug(hardwareMap,telemetry, true, color, inclYellow);
+        PipeCamera_Debug cam = new PipeCamera_Debug(hardwareMap, telemetry, true, color, inclYellow);
         ARM1_V3Robot arm1 = new ARM1_V3Robot(hardwareMap);
 
         waitForStart();
